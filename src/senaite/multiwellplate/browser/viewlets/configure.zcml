@@ -1,0 +1,36 @@
+<configure
+        xmlns="http://namespaces.zope.org/zope"
+        xmlns:browser="http://namespaces.zope.org/browser">
+
+    <!-- Static Resources Viewlet -->
+    <browser:viewlet
+            name="senaite.multiwellplate.styles"
+            for="senaite.multiwellplate.behaviors.IPlateable"
+            manager="plone.app.layout.viewlets.interfaces.IHtmlHead"
+            class="senaite.core.browser.viewlets.resources.ResourcesViewlet"
+            permission="zope2.View"
+            template="templates/style_resource.pt"
+            layer="senaite.multiwellplate.interfaces.ISenaiteMultiWellPlateLayer"
+    />
+
+    <browser:viewlet
+            name="senaite.multiwellplate.frontapp.resources"
+            for="senaite.multiwellplate.behaviors.IPlateable"
+            manager="plone.app.layout.viewlets.interfaces.IPortalFooter"
+            class="senaite.core.browser.viewlets.resources.ResourcesViewlet"
+            permission="zope2.View"
+            template="templates/front-app-resources.pt"
+            layer="senaite.multiwellplate.interfaces.ISenaiteMultiWellPlateLayer"
+    />
+
+    <browser:viewlet
+            name="senaite.multiwellplate.front_app"
+            for="senaite.multiwellplate.behaviors.IPlateable"
+            class=".resources.FrontApplication"
+            manager="plone.app.layout.viewlets.interfaces.IAboveContent"
+            template="templates/front-app.pt"
+            permission="zope2.View"
+            layer="senaite.multiwellplate.interfaces.ISenaiteMultiWellPlateLayer"
+    />
+
+</configure>

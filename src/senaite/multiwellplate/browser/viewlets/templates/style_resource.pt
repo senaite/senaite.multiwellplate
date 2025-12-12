@@ -1,0 +1,1 @@
+<link href="#" rel="stylesheet" tal:attributes="href string:${view/site_url}/++plone++senaite.multiwellplate.static/css/multiwellplate.css"/>

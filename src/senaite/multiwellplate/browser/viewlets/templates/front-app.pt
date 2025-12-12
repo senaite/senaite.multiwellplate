@@ -1,0 +1,26 @@
+<div
+    tal:omit-tag=""
+    tal:define="enabled python:view.enabled();
+                config_json python:view.init_config_json();"
+    tal:condition="python:enabled"
+    i18n:domain="senaite.multiwellplate">
+
+    <script>
+        function emit_plate_event(event) {
+            event.stopPropagation();
+            const extEvent = new CustomEvent('senaite:multiwellplate:anchor-item-click', {
+            detail: {
+                uid: event.target.getAttribute('uid'),
+            }
+            });
+            document.dispatchEvent(extEvent);
+        }
+    </script>
+
+    <script>
+        <span tal:replace="structure python:'document.multiwellplateConfig = {}'.format(config_json)"/>
+    </script>
+
+    <div id="senaite-multiwellplate-app"></div>
+
+</div>

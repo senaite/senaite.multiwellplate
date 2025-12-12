@@ -1,0 +1,133 @@
+<!--
+    Worksheet Multiwell Plate Template
+
+    All data is available using the worksheet dictionary.
+    Example for accessing and displaying data:
+
+    <p tal:content="python:worksheet['laboratory']['title']"></p>
+    or
+    <p tal:content="worksheet/laboratory/title"></p>
+
+    See README.txt for further details about the dict structure
+
+-->
+
+<?python
+    from bika.lims import api
+    from bika.lims.interfaces import IReferenceAnalysis
+    from bika.lims.interfaces import IRoutineAnalysis
+    from senaite.multiwellplate.behaviors import IMultiWellPlateBehavior
+
+    def get_id_from_ans(analysis):
+        if IReferenceAnalysis.providedBy(analysis):
+          return analysis.getSample().getId()
+        return analysis.getRequest().getId()
+
+    def get_plate_obj(worksheet):
+        return IMultiWellPlateBehavior(worksheet)
+
+    def get_idx_well_dict(pairs):
+        result = {}
+        for p in pairs:
+            if not result.get('well_number'):
+              result[p['well_number']] = [] 
+            result[p['well_number']].append(api.get_object_by_uid(p['analysis_uid']))
+        return result
+
+
+    get_idx_dict = get_idx_well_dict
+    get_plate = get_plate_obj
+    get_id = get_id_from_ans
+?>
+
+<tal:print
+  i18n:domain="senaite.core"
+  tal:define="worksheet       python:view.getWorksheet();
+              template        python:worksheet['obj'].getWorksheetTemplate();
+              laboratory      worksheet/laboratory;
+              plate           python:get_plate(worksheet['obj']);
+              rows            python:plate.getRowsCount();
+              cols            python:plate.getColsCount();
+              idxes           python:get_idx_dict(plate.getMultiWellPlate())">
+
+  <div id="header">
+    <div class='barcode-container'>
+      <div class='barcode'
+           data-code='code128'
+           data-showHRI='false'
+           data-barHeight='15'
+           data-addQuietZone='true'
+           tal:attributes="data-id worksheet/id">
+      </div>
+    </div>
+    <div class='lab-logo'>
+      <a tal:attributes="href laboratory/url">
+        <img class="logo"
+             height="25"
+             tal:attributes="src string:++plone++senaite.core.static/images/senaite.svg"/>
+      </a>
+    </div>
+    <h1>
+      <a tal:attributes="href worksheet/url"
+         tal:content="worksheet/id"></a>
+    </h1>
+  </div>
+  <div class="subheader">
+    <div>
+      <span i18n:translate="">Created on</span>&nbsp;
+      <span tal:content="worksheet/date_created"></span>&nbsp;
+      <span i18n:translate="">by</span>&nbsp;
+      <a tal:attributes="href python:('mailto:%s' % worksheet['createdby']['email'])"
+         tal:content="worksheet/createdby/fullname"></a>
+    </div>
+    <div>
+      <span i18n:translate="">Printed on</span>&nbsp;
+      <span tal:content="worksheet/date_printed"></span>&nbsp;
+      <span i18n:translate="">by</span>&nbsp;
+      <a tal:attributes="href python:('mailto:%s' % worksheet['printedby']['email'])"
+         tal:content="worksheet/printedby/fullname"></a>
+    </div>
+    <div>
+      <span i18n:translate="">Plate dimensions</span>:&nbsp;
+      <span tal:content="string: $rows x $cols"></span>
+      <span i18n:translate="">Plate template</span>:&nbsp;
+      <span tal:content="python: template.Title()"></span>
+    </div>
+    <div>
+      <span i18n:translate="">Plated by</span>:&nbsp;
+      <a tal:attributes="href python:('mailto:%s' % worksheet['analyst']['email'])"
+         tal:content="worksheet/analyst/fullname"></a>
+    </div>
+  </div>
+
+  <!-- MultiWell Plate -->
+  <div class="content">
+    <table class="plate_table" tal:attributes="style string:--rows: $rows;; --cols: $cols;;">
+     <tr tal:repeat="row python:range(rows+1)">
+        <td class="plate_table__cell"
+            tal:repeat="col python:range(cols+1)">
+            <div tal:define="x repeat/row/index;
+                             y repeat/col/index;
+                             idx python:(x-1) * cols + y">
+                <div tal:condition="python: not(x and y)">
+                    <div class="plate_table__label"
+                         tal:condition="python: not(x == 0 and y == 0)"
+                         tal:content="python: chr(65 + y - 1) if x == 0 else x"></div>
+                </div>
+                <div class="well" 
+                    tal:define="well_content python:idxes.get(idx, [])"
+                    tal:condition="python: x and y">
+                    <div class="well__header" >
+                      <span tal:content="idx"></span>
+                      <span tal:condition="well_content" tal:content="python: get_id(well_content[0])"></span>
+                    </div>
+                    <div tal:condition="well_content" tal:repeat="an python:well_content">
+                      <span class="keyword" tal:content="an/Keyword"></span>
+                    </div>
+                </div>
+            </div>
+        </td>
+     </tr>
+    </table>
+  </div>
+</tal:print>

@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<layers>
+    <!-- Remove Browser Layer -->
+    <layer name="senaite.multiwellplate"
+           interface="senaite.multiwellplate.interfaces.ISenaiteMultiWellPlateLayer"
+           remove="True"/>
+</layers>

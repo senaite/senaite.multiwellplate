@@ -1,0 +1,8 @@
+include *.rst
+include *.md
+exclude MANIFEST.in
+recursive-exclude static *
+recursive-exclude docs *
+recursive-include src/senaite/multiwellplate *
+recursive-exclude src/senaite/multiwellplate *.pyc
+recursive-exclude src/senaite/multiwellplate/locales/.tx *

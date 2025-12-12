@@ -1,0 +1,6 @@
+<% for(const js of files.js) { %>
+<script tal:attributes="src <%= 'string:${view/site_url}' + js %>"></script>
+<% } %>
+<% for(const css of files.css) { %>
+<link href="#" rel="stylesheet" tal:attributes="href <%= 'string:${view/site_url}' + css %>" />
+<% } %>

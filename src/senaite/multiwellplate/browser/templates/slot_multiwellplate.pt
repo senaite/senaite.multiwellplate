@@ -1,0 +1,20 @@
+<div class="slot-multiwellplate"
+     i18n:domain="senaite.multiwellplate"
+     tal:define="data options/data;">
+    <div class="multiwellplate-area-header">
+        <img
+            onclick="emit_plate_event(event);"
+            class="img multiwellplate-control"
+            tal:attributes="src string:++plone++senaite.multiwellplate.static/images/pipette.svg;
+                            uid python:str(data['analysisUid']);"
+        />
+        <div
+            class="coordinate-title"
+            tal:attributes="id python:str(data['analysisUid']);
+                            style python:str('anchor-name: --' + data['analysisUid']);"
+            tal:content="python:data['wellIdx'] or '&nbsp;'"
+        >
+            &nbsp;
+        </div>
+    </div>
+</div>

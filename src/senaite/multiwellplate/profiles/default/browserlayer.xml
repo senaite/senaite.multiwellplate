@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<layers>
+    <layer name="senaite.multiwellplate"
+           interface="senaite.multiwellplate.interfaces.ISenaiteMultiWellPlateLayer"
+    />
+</layers>

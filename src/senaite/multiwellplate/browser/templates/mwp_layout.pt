@@ -1,0 +1,21 @@
+<div
+    tal:omit-tag=""
+    tal:define="enabled python:view.enabled();
+                config_json python:view.init_config_json();"
+    i18n:domain="senaite.multiwellplate">
+
+    <tal:block tal:condition="python:enabled">
+        <script>
+            <span tal:replace="structure python:'document.multiwellplateConfig = {}'.format(config_json)"/>
+        </script>
+
+        <div id="senaite-multiwellplate-app"></div>
+    </tal:block>
+
+    <tal:block tal:condition="python:not enabled">
+        <h2 i18n:translate="ws_not_implemented_mwp">
+            This worksheet not implemented MultiWell Plate
+        </h2>
+    </tal:block>
+
+</div>

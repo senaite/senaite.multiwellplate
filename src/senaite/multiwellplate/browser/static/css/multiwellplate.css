@@ -1,0 +1,17 @@
+.multiwellplate-area-header {
+    display: flex;
+    align-items: center;
+}
+
+img.multiwellplate-control {
+    width: 16px;
+    cursor: pointer;
+    margin-right: 6px;
+}
+
+.coordinate-title {
+    display: block;
+    width: 50px;
+    line-height: 1;
+    overflow: hidden;
+}

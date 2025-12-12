@@ -1,0 +1,45 @@
+.layout-default {
+  display: none;
+}
+
+.layout-widget {
+  position: fixed;
+  position-area: right bottom;
+  width: fit-content;
+}
+
+.layout-app {
+  position: fixed;
+  z-index: 1;
+  inset: 0 0;
+  margin: 0;
+  align-content: center;
+  justify-content: center;
+  background-color: aliceblue;
+}
+
+.layout-app .workspace {
+  padding: 10px;
+ }
+
+.layout-container {
+  position: initial;
+  min-height: calc(3em * var(--rows) * 1.5);
+}
+
+:is(.layout-app, .layout-container) .workspace {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 3fr 1fr;
+  width: fit-content;
+  gap: 0.5em;
+  margin: auto;
+}
+
+
+.plate-side-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  user-select: none;
+}

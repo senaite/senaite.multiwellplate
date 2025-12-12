@@ -1,0 +1,54 @@
+<configure
+        xmlns="http://namespaces.zope.org/zope"
+        xmlns:browser="http://namespaces.zope.org/browser"
+        xmlns:plone="http://namespaces.plone.org/plone"
+        i18n_domain="senaite.multiwellplate">
+
+    <include package=".viewlets" />
+
+    <browser:page
+        name="analyses_classic_view"
+        for="senaite.multiwellplate.behaviors.IPlateable"
+        class=".worksheet.MultiWellPlateWorksheetView"
+        permission="senaite.core.permissions.ViewResults"
+        layer="senaite.multiwellplate.interfaces.ISenaiteMultiWellPlateLayer"
+    />
+
+    <browser:page
+        name="multiwellplate_api"
+        for="senaite.multiwellplate.behaviors.IPlateable"
+        class=".api.MultiWellPlateApi"
+        permission="senaite.core.permissions.ViewResults"
+        layer="senaite.multiwellplate.interfaces.ISenaiteMultiWellPlateLayer"
+    />
+
+    <!-- MultiWell Plate View -->
+    <browser:page
+        name="multiwellplate_layout_view"
+        for="senaite.core.interfaces.IWorksheet"
+        class=".worksheet.AnalysesPlatingView"
+        permission="senaite.core.permissions.ViewResults"
+        layer="senaite.multiwellplate.interfaces.ISenaiteMultiWellPlateLayer"
+    />
+
+    <browser:page
+        for="senaite.core.interfaces.IWorksheet"
+        name="manage_results"
+        class=".worksheet.MwpWorksheetManageResults"
+        permission="senaite.core.permissions.ViewResults"
+        layer="senaite.multiwellplate.interfaces.ISenaiteMultiWellPlateLayer"
+    />
+
+    <utility
+        name="mwp_worksheet_layout"
+        factory=".worksheet.MultiWellPlateWorksheetLayout"
+        provides="senaite.core.interfaces.IWorksheetLayouts"
+    />
+
+    <plone:static
+        directory="static"
+        type="plone"
+        name="senaite.multiwellplate.static"
+    />
+
+</configure>

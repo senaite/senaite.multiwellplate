@@ -1,0 +1,108 @@
+# -*- coding: utf-8 -*-
+#
+# This file is part of SENAITE.MULTIWELLPLATE.
+#
+# SENAITE.MULTIWELLPLATE is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published
+# by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright 2025 by it's authors.
+# Some rights reserved, see README and LICENSE.
+
+import json
+
+from Products.Five.browser import BrowserView
+from bika.lims import api
+from senaite.multiwellplate import logger
+from senaite.multiwellplate.utils import get_mwp_config
+from senaite.multiwellplate.utils import get_analysis_data
+from senaite.multiwellplate.behaviors import IPlateable
+from senaite.multiwellplate.behaviors import IMultiWellPlateBehavior
+
+
+class MultiWellPlateApi(BrowserView):
+    """API endpoint for MultiWell Plate
+    """
+
+    def __init__(self, context, request):
+        self.context = context
+        self.request = request
+
+    def __call__(self):
+        data = self.request.get("BODY", "{}")
+        self.data = json.loads(data)
+        logger.info("[MWP] API Request: {}".format(self.data))
+
+        method = "ajax_unknown"
+        if "method" in self.data:
+            method = "ajax_{}".format(self.data["method"])
+
+        func = getattr(self, method, None)
+        if func is None:
+            return self.error("Invalid action", status=400)
+        if not IPlateable.providedBy(self.context):
+            message = "{} not implement IPlateable".format(self.context)
+            return self.error(message=message)
+
+        self.mwp = IMultiWellPlateBehavior(self.context)
+
+        result = func()
+        logger.info("[MWP] API Response: {}".format(result))
+        return json.dumps(result)
+
+    def ajax_unknown(self):
+        return self.error("Invalid action", status=400)
+
+    def error(self, message, status=500, **kw):
+        """Set a JSON error object and a status to the response
+        """
+        self.request.response.setStatus(status)
+        result = {"success": False, "errors": message}
+        result.update(kw)
+        return result
+
+    def ajax_get_config(self):
+        """Start config for front application
+        """
+        return get_mwp_config(self.context)
+
+    def ajax_read_plate_data(self):
+        """Returned plate configuration
+        :returns: The object of multiwell plate for this worksheet
+        :rtype: dict
+        """
+        analyses = {}
+        for an in self.context.getAnalyses():
+            an_uid = api.get_uid(an)
+            analyses[an_uid] = get_analysis_data(self.mwp, an)
+        return {"analyses": analyses}
+
+    def ajax_write_plate_data(self):
+        """Write plate configuration
+        :returns: Result of write plate
+        :rtype: dict
+        """
+        plate = self.data.get("plate_data", None)
+        if not plate:
+            self.mwp.setMultiWellPlate([])
+        data = []
+        analyses = plate.get("analyses", {})
+        for uid in analyses.keys():
+            well_idx = analyses.get(uid).get("wellIdx")
+            if not well_idx:
+                continue
+            data.append({
+                "analysis_uid": uid,
+                "well_number": int(well_idx),
+            })
+        self.mwp.setMultiWellPlate(data)
+        return {"success": True}

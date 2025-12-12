@@ -1,0 +1,64 @@
+.barcode-container {
+    width:100%;
+}
+.barcode {
+    float: right;
+}
+div.worksheet {
+    font-size:0.8em;
+}
+div.worksheet a {
+    color:#000;
+    text-decoration:none;
+}
+div.worksheet h1 {
+    padding-top:15px;
+    font-size:1.7em;
+}
+div.subheader {
+    padding: 10px 0;
+}
+div.content {
+    padding:20px 0;
+    font-size:0.85em;
+    border-top:1px solid #333;
+    height: 100%;
+}
+
+div#footer {
+    padding-top: 1em;
+}
+
+table.plate_table {
+    width: 100%;
+}
+
+td.plate_table__cell:not(:first-of-type) {
+    width: calc(100% / var(--cols))
+} 
+
+div.plate_table__label {
+    text-align: center;
+}
+
+div.well {
+    aspect-ratio: 1/1;
+    border: 1px solid grey;
+    font-size: 0.75em;
+}
+
+div.well__header {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+div.well .keyword {
+    overflow: hidden;
+}
+
+@media print {
+    div.content table div.barcode {
+        margin: 0 0 0 -10px;
+    }
+}

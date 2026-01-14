@@ -33,11 +33,43 @@
   align-items: center;
   justify-content: center;
   border: 3px solid transparent;
+  position: relative;
+}
+
+.well-analyses-counter-subscript {
+  z-index: 10;
+  width: 1em;
+  height: 1em;
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  top: -0.5em;
+  right: -0.5em;
+  background-color: #ef4444;
+  border-radius: 50%;
+  color: white;
+  font-size: 10px;
+  border: 1px solid white;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
 }
 
 .layout-widget .well--has-analyses {
   background-color: coral;
 }
+
+.layout-widget .widget .well-inner {
+  h2 {
+    font-size: 0.9em;
+    font-weight: normal;
+    margin: 0;
+  }
+
+  .well-analyses-list-container {
+    display: none;
+  }
+}
+
 
 .layout-widget .well:hover {
   border: 3px solid #AAA;
@@ -52,8 +84,10 @@
   background-color: transparent;
 }
 
+
 :is(.layout-app, .layout-container) .well-inner {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   aspect-ratio: 1 / 1;
@@ -61,6 +95,67 @@
   height: calc(100% - 0.5em);
   border: 3px solid white;
   background-color: white;
+  position: relative;
+  z-index: 1;
+
+  .well-sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding-top: 0.1em;
+    h2 {
+      margin-top: 0.1em;
+      font-size: 0.9em;
+      font-weight: normal;
+      margin: 0;
+    }
+  };
+
+  .well-center-header {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    h2 {
+      font-size: 0.9em;
+      font-weight: normal;
+    }
+  }
+
+  .well-analyses-list-container {
+    overflow-y: auto;
+    flex: 1;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2em;
+  }
+
+  .well-analyses-list-item {
+    font-size: 0.75em;
+    padding: 0.1em 0.2em;
+    max-width: 2em;
+    text-wrap-mode: nowrap;
+    text-overflow: clip;
+    margin-left: 0.2em;
+    border-left: 2px solid transparent;
+  }
+
+  .well-analyses-list-item--selected {
+    font-weight: bold;
+    border-left: 2px solid #357ABD;
+  }
+
+  .well-analyses-list-item:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding-left: 0.4em;
+  }
+
+  .well-analyses-list-item:active {
+    background-color: rgba(0, 0, 0, 0.1);
+    padding-left: 0.3em;
+  }
 }
 
 
@@ -70,8 +165,8 @@
 }
 
 :is(.layout-app, .layout-container) .well.well--has-analyses .well-inner {
-    background-color: coral;
-    border-color: coral;
+  background-color: coral;
+  border-color: coral;
 }
 
 :is(.layout-app, .layout-container) .well.well--selected .well-inner {
@@ -89,43 +184,211 @@
   border: 3px solid darkgray;
 }
 
-.well--is-prepositioned .well-inner {
+.well.well--not-assignable {
+  opacity: 0.5;
+  background-color: darkgray;
+  border: 3px solid darkgray;
+}
+
+.well--is-prepositioned .well-inner,
+.well.well--has-analyses.well--is-prepositioned .well-inner {
   border: 3px dashed #357ABD;
   background-color: lightpink;
 }
 
+/* Plate Toolbar - Modern & Compact */
+.plate__toolbar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem;
+  background: linear-gradient(to bottom, #ffffff, #fafafa);
+  border-bottom: 1px solid #e5e7eb;
+  min-height: 2.5rem;
+}
+
 .preposition-mode-switch {
-    display: flex;
-    background: #f3f4f6;
-    border-radius: 0.5rem;
+  display: inline-flex;
+  background: #f3f4f6;
+  border-radius: 0.5rem;
+  padding: 0.25rem;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .switch-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem 0.75rem;
-    border: none;
-    background: transparent;
-    border-radius: 0.375rem;
-    cursor: pointer;
-    color: #6b7280;
-    transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.375rem 0.625rem;
+  border: none;
+  background: transparent;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.switch-btn svg {
+  width: 18px;
+  height: 18px;
+  transition: all 0.2s;
+}
+
+.switch-btn:hover {
+  color: #374151;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.switch-btn.active {
+  background: white;
+  color: #3b82f6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.switch-btn.active svg {
+  transform: scale(1.05);
+}
+
+/* Drag Overlay Styles */
+
+/* .drag-overlay-pointer {
+  position: fixed;
+  width: 40px;
+  height: 40px;
+  background-color: rgba(53, 122, 189, 0.8);
+  border: 2px solid white;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+} */
+
+.dnd-overlay--dragging {
+  position: fixed;
+  cursor: grabbing !important;
+}
+
+.drag-overlay-content {
+  position: relative;
+  pointer-events: none;
+  /* animation: dragOverlayFadeIn 0.2s ease-out; */
+}
+
+@keyframes dragOverlayFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
   }
 
-  .switch-btn:hover {
-    color: #374151;
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.drag-overlay-item-on-well {
+  position: absolute;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1500;
+  /* animation: overlayItemFadeIn 0.2s ease-out; */
+  position-anchor: var(--position-anchor);
+}
+
+.drag-overlay-item {
+  background: white;
+  border: 2px solid #357ABD;
+  border-radius: 6px;
+  padding: 6px 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25), 0 4px 8px rgba(0, 0, 0, 0.15);
+  max-width: 200px;
+  transition: all 0.15s ease-out;
+  /* animation: dragItemPulse 1.5s ease-in-out infinite; */
+}
+
+@keyframes dragItemPulse {
+
+  0%,
+  100% {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.1), 0 0 0 0 rgba(53, 122, 189, 0.4);
   }
 
-  .switch-btn.active {
-    background: white;
-    color: #3b82f6;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  50% {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.1), 0 0 0 8px rgba(53, 122, 189, 0.1);
+  }
+}
+
+.drag-overlay-item .item-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.drag-overlay-item .item-info {
+  flex: 1;
+}
+
+.drag-overlay-item .item-name {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 13px;
+  margin-bottom: 2px;
+  line-height: 1.2;
+}
+
+.drag-overlay-item .item-meta {
+  font-size: 11px;
+  color: #6b7280;
+  line-height: 1.1;
+}
+
+/* .drag-overlay-counter {
+  background: linear-gradient(135deg, #357ABD 0%, #2563eb 100%);
+  color: white;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(53, 122, 189, 0.4);
+  animation: counterBounce 0.3s ease-out;
+} */
+
+@keyframes counterBounce {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
   }
 
-  .plate__toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 1em;
+  60% {
+    transform: scale(1.05);
   }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Enhanced well animation when dragging over plate */
+.well--is-prepositioned .well-inner {
+  animation: wellPrepositioning 0.6s ease-in-out infinite;
+}
+
+@keyframes wellPrepositioning {
+
+  0%,
+  100% {
+    transform: scale(1);
+    border-color: #357ABD;
+  }
+
+  50% {
+    transform: scale(1.05);
+    border-color: #60a5fa;
+  }
+}

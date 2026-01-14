@@ -6,33 +6,129 @@ const generatorFnSelector = {
   'shift': shiftOrderIndices,
 };
 
+const listeners = new Set();
+const snapshots = new Map();
+
 class WorksheetPresenter {
-  constructor(model, apiService) {
+  constructor(model, ruleEngine, apiService) {
     this.model = model;
+    this.ruleEngine = ruleEngine;
     this.apiService = apiService;
-    this.view = null;
+    this.views = new Set();
     this.isLoading = false;
     this.error = null;
-    this.selectedWells = new Set();
-    this.selectedUnassigned = new Set();
-    this.nextActionUids = new Set();
-    this.nextAssignments = {};
+    this.selectedAnalyses = new Set();
+    this.nextAssignments = [];
     this.nextAction = null;
-  }
-
-  setView(view) {
-    this.view = view;
+    this.currentPreposition = {};
+    this.prepositionMode = 'row';
   }
 
   updateView() {
-    if (this.view) {
-      this.view.forceUpdate();
+    listeners.forEach(listener => listener());
+  }
+
+  updateWellView(wellIdx) {
+    this.updateStore(wellIdx);
+  }
+
+  subscribe(listener) {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
+  }
+
+  getWellDataSnapshot(idx) {
+    const snapshot = snapshots.get(idx);
+    if (snapshot) {
+      return snapshot;
+    }
+    // Create initial snapshot if not exists
+    const initialSnapshot = {
+      isSelectable: this.getWellIdsWithAnalyses().includes(idx),
+      isSelected: this.getSelectedWellsForView().includes(idx),
+      assignedAnalyses: Object.entries(this.model.analyses)
+        .filter(([uid, analysis]) => analysis.wellIdx === idx)
+        .map(([uid, analysis]) => ({ uid, ...this.getDataByUid(uid) })) || [],
+      prepositionedItems: Object.fromEntries(
+        Object.entries(this.getCurrentPreposition())
+          .filter(([uid, wellIdx]) => wellIdx === idx)
+          .map(([uid, wellIdx]) => [uid, this.getDataByUid(uid)])) || {},
+      selectedAnalyses: this.getSelectedAnalyses(),
+    };
+    snapshots.set(idx, initialSnapshot);
+    return initialSnapshot;
+  }
+
+  getAssignedListSnaphot() {
+    const snapshot = snapshots.get('assignedList');
+    if (snapshot) {
+      return snapshot;
+    }
+    const initialSnapshot = this.getAssignedAnalysesUids()
+      .map(uid => ({ uid, wellIdx: this.model.analyses[uid].wellIdx }));
+    snapshots.set('assignedList', initialSnapshot);
+    return initialSnapshot;
+  }
+
+  updateAssignedList() {
+    const snapshot = this.getAssignedAnalysesUids()
+      .map(uid => ({ uid, wellIdx: this.model.analyses[uid].wellIdx }));
+    const prevSnapshot = snapshots.get('assignedList');
+    const hasChanged = JSON.stringify(snapshot) !== JSON.stringify(prevSnapshot);
+    if (hasChanged) {
+      snapshots.set('assignedList', snapshot);
+      this.updateView();
+    }
+  }
+
+  getUnassignedListSnapshot() {
+    const snapshot = snapshots.get('unassignedList');
+    if (snapshot) {
+      return snapshot;
+    }
+    const initialSnapshot = this.getUnassignedAnalysesUids()
+      .map(uid => ({ uid, isSelected: this.selectedAnalyses.has(uid), data: this.getDataByUid(uid) }));
+    snapshots.set('unassignedList', initialSnapshot);
+    return initialSnapshot;
+  }
+
+  updateUnassignedList() {
+    const snapshot = this.getUnassignedAnalysesUids()
+      .map(uid => ({ uid, isSelected: this.selectedAnalyses.has(uid), data: this.getDataByUid(uid) }));
+    const prevSnapshot = snapshots.get('unassignedList');
+    const hasChanged = JSON.stringify(snapshot) !== JSON.stringify(prevSnapshot);
+    if (hasChanged) {
+      snapshots.set('unassignedList', snapshot);
+      this.updateView();
+    }
+  }
+
+  updateStore(idx) {
+    const snapshot = {
+      isSelectable: this.getWellIdsWithAnalyses().includes(idx),
+      isSelected: this.getSelectedWellsForView().includes(idx),
+      assignedAnalyses: Object.entries(this.model.analyses)
+        .filter(([uid, analysis]) => analysis.wellIdx === idx)
+        .map(([uid, analysis]) => ({ uid, ...this.getDataByUid(uid) })) || [],
+      prepositionedItems: Object.fromEntries(
+        Object.entries(this.getCurrentPreposition())
+          .filter(([uid, wellIdx]) => wellIdx === idx)
+          .map(([uid, wellIdx]) => [uid, this.getDataByUid(uid)])) || {},
+      selectedAnalyses: this.getSelectedAnalyses(),
+    };
+    const prevSnapshot = snapshots.get(idx);
+    const hasChanged = JSON.stringify(snapshot) !== JSON.stringify(prevSnapshot);
+    if (hasChanged) {
+      snapshots.set(idx, snapshot);
+      this.updateView();
     }
   }
 
   async initialize(config) {
     if (config) {
-      this.model.setData(config)
+      const rules = config.rules;
+      this.model.setData({ rules, ...config });
+      this.ruleEngine.setRules(rules);
     } else {
       await this.loadData();
     }
@@ -46,7 +142,6 @@ class WorksheetPresenter {
       const data = await this.apiService.fetch();
       console.log(data);
       this.model.setData(data);
-      this.updateView();
     } catch (error) {
       this.setError(error.message);
     } finally {
@@ -55,16 +150,11 @@ class WorksheetPresenter {
   }
 
   getConfig() {
-    return {fields: this.model.fields, rowsCount: this.model.rowsCount, colsCount: this.model.colsCount} || {};
+    return { fields: this.model.fields, rowsCount: this.model.rowsCount, colsCount: this.model.colsCount } || {};
   }
 
-  findUidByWellIdx(wellIdx) {
-    const res = Object.keys(this.model.analyses).filter(key => this.model.analyses[key].wellIdx == wellIdx);
-    return res.length === 1 ? res[0] : null;
-  }
-
-  getAnalysis(uid) {
-    return this.model.analyses[uid];
+  findWellIdxByUid(uid) {
+    return this.model.analyses[uid]?.wellIdx || null;
   }
 
   getNextAction() {
@@ -75,33 +165,12 @@ class WorksheetPresenter {
     this.nextAction = action;
   }
 
-  cleanNextAction() {
-    this.nextAction = () => { };
-  }
-
-  getNextActionUid() {
-    return Array.from(this.nextActionUids)[0];
-  }
-
-  getNextActionUids() {
-    return Array.from(this.nextActionUids);
-  }
-
-  setNextActionsUids(analysisIds) {
-    this.nextActionUids = new Set(analysisIds);
-    this.updateView();
-  }
-
   getNextAssignments() {
     return this.nextAssignments;
   }
 
   setNextAssignments(assignments) {
     this.nextAssignments = assignments;
-  }
-
-  cleanNextActionsUids() {
-    this.nextActionUids = new Set();
   }
 
   doNextAction(assignments) {
@@ -112,26 +181,34 @@ class WorksheetPresenter {
     }
   }
 
-  selectWell(well) {
-    if (!this.selectedWells) { this.selectedWells = new Set(); }
-    this.selectedWells.add(well);
-    this.updateView();
+  selectWell(wellIdx) {
+    Object.entries(this.model.analyses).forEach(([uid, analysis]) => {
+      if (analysis.wellIdx === wellIdx) {
+        this.selectedAnalyses.add(uid);
+      }
+    });
+    this.updateWellView(wellIdx);
   }
 
-  deselectWell(well) {
-    if (this.selectedWells) { this.selectedWells.delete(well); }
-    this.updateView();
+  deselectWell(wellIdx) {
+    Object.entries(this.model.analyses).forEach(([uid, analysis]) => {
+      if (analysis.wellIdx === wellIdx) {
+        this.selectedAnalyses.delete(uid);
+      }
+    });
+    this.updateWellView(wellIdx);
   }
 
   deselectAllWells() {
-    this.setSelectedWells([]);
+    this.setSelectedAnalyses([]);
   }
 
-  selectAllNonEmptyWells = () => this.setSelectedWells(this.getWellIdsWithAnalyses());
+  selectAllNonEmptyWells = () => this.getWellIdsWithAnalyses().map(wellIdx => this.selectWell(wellIdx));
+  selectAllUnassignedAnalyses = () => this.getUnassignedAnalysesUids().forEach(uid => this.select(uid));
 
-  setSelectedWells(wells) {
-    this.selectedWells = new Set(wells);
-    this.updateView();
+  // ===============
+  getAnalyses() {
+    return this.model.analyses;
   }
 
   getAnalysesUids() {
@@ -142,6 +219,11 @@ class WorksheetPresenter {
     return this.model.getWellIdsWithAnalyses();
   }
 
+  getAssignedAnalysesUids() {
+    return Object.keys(this.model.analyses).filter(key => this.model.analyses[key].wellIdx);
+  }
+
+  // ===============
   getUnassignedAnalyses() {
     return Object.values(this.model.analyses).filter(value => !value.wellIdx);
   }
@@ -150,141 +232,139 @@ class WorksheetPresenter {
     return Object.keys(this.model.analyses).filter(key => !this.model.analyses[key].wellIdx);
   }
 
-  setSelectedUnassigned(analysisIds) {
-    this.selectedUnassigned = new Set(analysisIds);
-    this.updateView();
+  getSelectedAnalyses() {
+    return Array.from(this.selectedAnalyses);
   }
 
-  getSelectedUnassigned() {
-    return Array.from(this.selectedUnassigned);
+  setSelectedAnalyses(uids) {
+    const previousSelectedWells = this.getSelectedWellsForView();
+    this.selectedAnalyses = new Set(uids);
+    [...new Set([...previousSelectedWells, ...this.getSelectedWellsForView()])].forEach(wellIdx => this.updateWellView(wellIdx));
+    this.updateUnassignedList();
   }
 
-  cleanSelectedUnassigned() {
-    this.selectedUnassigned = new Set();
-    this.updateView();
+  select(uid) {
+    this.selectedAnalyses.add(uid);
+    this.updateUnassignedList();
   }
 
-  async assignAnalysis({ uid, wellIdx }) {
-    await assignAnalyses([{uid, wellIdx}])
+  deselect(uid) {
+    this.selectedAnalyses.delete(uid);
+    this.updateUnassignedList();
   }
 
   async assignAnalyses(listOfAssignments) {
     {
       this.setLoading(true);
       this.setError(null);
+      const prevUsedWellIdxes = new Set();
+      const newUsedWellIdxes = new Set();
       const initialState = this.model.analyses;
 
       try {
         listOfAssignments.forEach(({ uid, wellIdx }) => {
+          if (this.model.analyses[uid]?.wellIdx) {
+            prevUsedWellIdxes.add(this.model.analyses[uid].wellIdx);
+          }
           this.model.assignAnalysis({ uid: uid, wellIdx: wellIdx })
+          newUsedWellIdxes.add(wellIdx);
         });
         await this.apiService.write_plate_data(this.model.analyses);
-        this.updateView();
       } catch (error) {
         this.setError(error.message);
         this.model.analyses = initialState;
+        prevUsedWellIdxes.forEach(wellIdx => this.updateWellView(wellIdx));
       } finally {
         this.setLoading(false);
+        [...new Set([...prevUsedWellIdxes, ...newUsedWellIdxes])].forEach(wellIdx => this.updateWellView(wellIdx));
+        this.updateUnassignedList();
+        this.updateAssignedList();
       }
     }
   }
 
-  // async unassignAnalysis({ uid }) {
-  //   this.setLoading(true);
-  //   this.setError(null);
-
-  //   try {
-  //     await this.apiService.unassignAnalysis({ uid });
-  //     this.model.unassignAnalysis({ uid });
-  //     this.updateView();
-  //   } catch (error) {
-  //     this.setError(error.message);
-  //   } finally {
-  //     this.setLoading(false);
-  //   }
-  // }
-
-  // async unassignAnalyses(uids) {
-  //   this.setLoading(true);
-  //   this.setError(null);
-
-  //   try {
-  //     await this.apiService.unassignAnalyses(uids);
-  //     uids.map(item => this.model.unassignAnalysis(item));
-  //     this.deselectAllWells();
-  //     this.updateView();
-  //   } catch (error) {
-  //     this.setError(error.message);
-  //   } finally {
-  //     this.setLoading(false);
-  //   }
-  // }
-
-  getPrepositionedAnalyses({ targetPos, initialPos, uidList, prepositionMode }) {
-    const mode = prepositionMode || 'row';
-    const prepositioned = {};
-    const availableWellIndices = new Set(this.model.getWellIdsEmpty());
-    const generatorFn = generatorFnSelector[mode] || rowOrderIndices;
-    const indicesGenerator = generatorFn({
-      targetRow: Math.floor((targetPos - 1) / this.model.colsCount) + 1,
-      targetCol: ((targetPos) % this.model.colsCount),
-      initialRow: Math.floor((initialPos - 1) / this.model.colsCount) + 1,
-      initialCol: ((initialPos) % this.model.colsCount),
-      rowsCount: this.model.rowsCount,
-      colsCount: this.model.colsCount
-    });
-
-    for (const { uid, wellIdx } of uidList.sort((a, b) => a.wellIdx - b.wellIdx)) {
-      let found = false;
-      while (!found) {
-        const nextIdx = indicesGenerator.next(wellIdx);
-        if (nextIdx.done) {
-          console.warn('Not enough available wells to preposition all analyses.');
-          found = true;
-          continue;
-        }
-        if (availableWellIndices.has(nextIdx.value)) {
-          prepositioned[uid] = nextIdx.value;
-          availableWellIndices.delete(nextIdx.value);
-          found = true;
-        }
-      }
-    }
-
-    return prepositioned;
+  getPrepositionMode() {
+    return this.prepositionMode;
   }
 
-  handleFilterChange(filterText) {
-    this.model.setFilter(filterText);
+  setPrepositionMode(mode) {
+    this.prepositionMode = mode;
     this.updateView();
   }
 
-  search(filterText) {    
-    return Object.entries(this.model.analyses).filter(([k,v]) => searchTextInObjectValues(v.data, filterText)).map(([k, v]) => k)
+  getCurrentPreposition() {
+    return this.currentPreposition;
   }
 
-  getWellsForView() {
-    return this.model.getWells();
+  setCurrentPreposition(preposition) {
+    const prevPreposition = this.currentPreposition;
+    this.currentPreposition = preposition;
+    [...new Set([...Object.values(prevPreposition), ...Object.values(preposition)])].forEach(wellIdx => this.updateWellView(wellIdx));
+  }
+
+  async evaluateRules(facts) {
+    return this.ruleEngine.run(facts);
+  }
+
+  async getPrepositionedAnalyses({ targetPos, initialPos, uidList, prepositionMode }) {
+
+    const mode = prepositionMode || 'row';
+    const prepositioned = {};
+    const generatorFn = generatorFnSelector[mode] || rowOrderIndices;
+
+    const { colsCount, rowsCount } = this.model;
+    const generatorParams = {
+      targetRow: Math.floor((targetPos - 1) / colsCount) + 1,
+      targetCol: (targetPos % colsCount) || colsCount,
+      initialRow: Math.floor((initialPos - 1) / colsCount) + 1,
+      initialCol: (initialPos % colsCount) || colsCount,
+      rowsCount,
+      colsCount
+    };
+
+    const sortedList = [...uidList].sort((a, b) => a.wellIdx - b.wellIdx);
+
+    for (const { uid, wellIdx } of sortedList) {
+      const indicesGenerator = generatorFn(generatorParams);
+
+      while (true) {
+        const nextIdx = indicesGenerator.next(wellIdx);
+
+        if (nextIdx.done) {
+          console.warn('Not enough available wells to preposition all analyses.');
+          break;
+        }
+
+        const res = await this.ruleEngine.run({ nextIdx: nextIdx.value, uid, prepositioned });
+        if (res.events.length > 0) {
+          prepositioned[uid] = nextIdx.value;
+          break;
+        }
+      }
+    }
+    return prepositioned;
+  }
+
+  search(filterText) {
+    const filterable = Object.entries(this.getConfig().fields)
+      .filter(([fieldKey, fieldConfig]) => fieldConfig.filterable)
+      .map(([fieldKey, fieldConfig]) => fieldKey);
+    return Object.entries(this.model.analyses)
+      .filter(([k, v]) => searchTextInObjectValues(
+        Object.fromEntries(filterable.map(fieldKey => [fieldKey, v.data[fieldKey]])),
+        filterText))
+      .map(([k, v]) => k)
   }
 
   getSelectedWellsForView() {
-    return this.selectedWells;
+    return Array.from(this.getSelectedAnalyses().map(uid => this.model.analyses[uid].wellIdx).filter(wellIdx => wellIdx !== null));
   }
 
-  getSelectedWellsAssigments() {
-    return this.selectedWells;
-  }
 
-  cleanSelectedWells() {
-    const assignments = Array.from(this.getSelectedWellsForView()).map(wellIdx => {
-      return { uid: this.findUidByWellIdx(wellIdx), wellIdx: null};
-    });
+  unassignSelected() {
+    const assignments = this.getSelectedAnalyses().map(uid => ({ uid: uid, wellIdx: null }))
     this.assignAnalyses(assignments);
     this.deselectAllWells();
-  }
-
-  getFilterForView() {
-    return this.model.getFilter();
   }
 
   getDataByUid(uid) {
@@ -293,29 +373,18 @@ class WorksheetPresenter {
 
   afterDragCleanUp() {
     this.deselectAllWells();
-    this.cleanSelectedUnassigned();
     this.setNextAction(null);
-    this.setNextAssignments({});
-  }
-
-  isLoadingForView() {
-    return this.isLoading;
-  }
-
-  getErrorForView() {
-    return this.error;
+    this.setSelectedAnalyses([]);
+    this.setNextAssignments([]);
   }
 
   setLoading(loading) {
     this.isLoading = loading;
-    this.updateView();
   }
 
   setError(error) {
     this.error = error;
-    this.updateView();
   }
-
 
 }
 

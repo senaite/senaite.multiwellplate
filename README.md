@@ -15,7 +15,23 @@ SENAITE.MULTIWELLPLATE is an add-on that provides a set of tools for labs that u
 
 ## Configure plate templates
 
-How to setup plate template
+Configuring plate templates is the first step in setting up your workflow. This section explains how to tailor plate templates to your routine. All configuration fields are available for any Worksheet Template object after the add-on is installed.
+
+### Create a new Worksheet Template
+
+It makes sense to pay attention to template naming, as this will make it easier for analysts to choose the correct one. You may include the plate dimensions or the number of wells directly in the Worksheet Template title.
+
+### Enabling MultiwellPlate option
+
+Set the “Enable multiwell” checkbox to Enabled.
+
+### Setting up plate dimensions
+
+Enter the number of rows and columns in the corresponding fields.
+
+### Customs fields setup
+
+Each of the enclosed fields is calculated and passed along with every Analysis object. You can also configure which fields are used as the title and description, as well as which values are used as sorting or grouping keys by analysts.
 
 ## Assign to wells
 

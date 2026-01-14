@@ -2,6 +2,10 @@
 // Functional composition utilities
 const pipe = (...fns) => (x) => fns.reduce((v, f) => f(v), x);
 
+const partial = (fn, ...partials) => (...args) => {
+  return fn(...partials, ...args);
+};
+
 const map = (fn) => function* (iterable) {
   for (const item of iterable) {
     yield fn(item);
@@ -35,7 +39,7 @@ const indexToCoords = (index, rowsCount, colsCount) => ({
 // Generator functions for iteration sequences
 function* rowOrderIndices({ targetRow, targetCol, rowsCount, colsCount }) {
   for (let r = targetRow; r <= rowsCount; r++) {
-    const colStart = r === targetRow ? targetCol : 0;
+    const colStart = r === targetRow ? targetCol : 1;
     for (let c = colStart; c <= colsCount; c++) {
       yield (r - 1) * colsCount + c;
     }
@@ -44,7 +48,7 @@ function* rowOrderIndices({ targetRow, targetCol, rowsCount, colsCount }) {
 
 function* columnOrderIndices({ targetRow, targetCol, rowsCount, colsCount }) {
   for (let c = targetCol; c <= colsCount; c++) {
-    const rowStart = c === targetCol ? targetRow : 0;
+    const rowStart = c === targetCol ? targetRow : 1;
     for (let r = rowStart; r <= rowsCount; r++) {
       yield (r - 1) * colsCount + c;
     }
@@ -52,8 +56,8 @@ function* columnOrderIndices({ targetRow, targetCol, rowsCount, colsCount }) {
 }
 
 function* shiftOrderIndices({ targetRow, targetCol, initialRow, initialCol, rowsCount, colsCount }) {
-  const rowShift = targetRow - (initialRow || 0);
-  const colShift = targetCol - (initialCol || 0);
+  const rowShift = targetRow - (initialRow || 1);
+  const colShift = targetCol - (initialCol || 1);
   const totalShift = rowShift * colsCount + colShift;
   // const startIdx = (initialRow + rowShift - 1) * colsCount + initialCol + colShift;
   const endIdx = rowsCount * colsCount;
@@ -95,6 +99,7 @@ function searchTextInObjectValues(obj, searchText) {
 }
 
 export {
+  partial,
   pipe,
   map,
   filter,

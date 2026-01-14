@@ -10,17 +10,18 @@
 
 .layout-app {
   position: fixed;
-  z-index: 1;
-  inset: 0 0;
+  inset: 0;
   margin: 0;
-  align-content: center;
+  display: flex;
+  align-items: center;
   justify-content: center;
   background-color: aliceblue;
+  padding: 2rem;
 }
 
 .layout-app .workspace {
-  padding: 10px;
- }
+  padding: 0;
+}
 
 .layout-container {
   position: initial;
@@ -28,14 +29,66 @@
 }
 
 :is(.layout-app, .layout-container) .workspace {
+  width: 100%;
+  height: 100%;
   margin: 0;
   display: grid;
-  grid-template-columns: 1fr 3fr 1fr;
-  width: fit-content;
   gap: 0.5em;
-  margin: auto;
+  overflow: hidden;
+
+  /* Wide screen (default): 3 columns - SideList | PlateView | SideDrawer */
+  grid-template-columns: 18vi auto 18vi;
+  grid-template-rows: 1fr;
+  grid-template-areas: "sidelist plate sidedrawer";
 }
 
+/* Medium screen: SideDrawer moves under PlateView */
+@media (max-width: 1200px) {
+  :is(.layout-app, .layout-container) .workspace {
+    grid-template-columns: 18vi 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "sidelist plate"
+      "sidelist sidedrawer";
+  }
+}
+
+/* Small screen: SideDrawer disappears, only SideList and PlateView */
+@media (max-width: 768px) {
+  :is(.layout-app, .layout-container) .workspace {
+    grid-template-columns: minmax(200px, 25vi) 1fr;
+    grid-template-rows: 1fr;
+    grid-template-areas: "sidelist plate";
+  }
+
+  .workspace-sidedrawer {
+    display: none;
+  }
+}
+
+/* Grid area assignments */
+.workspace-sidelist {
+  grid-area: sidelist;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  container-name: list;
+  container-type: size;
+}
+
+.workspace-plate {
+  grid-area: plate;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.workspace-sidedrawer {
+  grid-area: sidedrawer;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 
 .plate-side-wrapper {
   display: flex;

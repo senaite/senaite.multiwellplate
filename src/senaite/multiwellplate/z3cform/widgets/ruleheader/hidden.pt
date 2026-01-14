@@ -1,0 +1,32 @@
+<div xmlns="http://www.w3.org/1999/xhtml"
+     xmlns:tal="http://xml.zope.org/namespaces/tal"
+     xmlns:metal="http://xml.zope.org/namespaces/metal"
+     xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+     tal:omit-tag="">
+
+    <tal:widget define="name       python:view.name;
+                      value      python:view.value;
+                      rule_id   python:value.get('id', '');
+                      rule_title   python:value.get('title', '');
+                      rule_description   python:value.get('description', '');
+                      rule_color   python:value.get('color', '');
+                      rule_applies_to   python:value.get('applies_to', '');">
+
+    <input type="hidden"
+           tal:attributes="name string:${name}.id:record:str;
+                           value rule_id;"/>
+    <input type="hidden"
+           tal:attributes="name string:${name}.title:record:str;
+                           value rule_title;"/>
+    <input type="hidden"
+           tal:attributes="name string:${name}.description:record:str;
+                           value rule_description;"/>
+    <input type="hidden"
+           tal:attributes="name string:${name}.color:record:str;
+                           value rule_color;"/>
+    <input type="hidden"
+           tal:attributes="name string:${name}.applies_to:record:str;
+                           value rule_applies_to;"/>
+  </tal:widget>
+
+</div>

@@ -28,6 +28,10 @@ from senaite.multiwellplate import messageFactory as _
 from zope import schema
 from zope.interface import Interface
 
+from .ruleheaderfield import DEFAULT_RULE_HEADER
+from .ruleheaderfield import RuleHeaderField
+from senaite.multiwellplate.z3cform.widgets.ruleheader import RuleHeaderWidgetFactory
+
 
 class IFieldRecordSchema(Interface):
     """DataGrid Row for field record
@@ -108,21 +112,25 @@ class IRuleRecordSchema(Interface):
     """DataGrid Row for field record
     """
 
-    directives.widget("rule_id", style=u"width: 150px!important;")
-    rule_id = schema.TextLine(
+    directives.widget(
+        "rule_header",
+        RuleHeaderWidgetFactory,
+        style=u"width: 150px!important;"
+    )
+    rule_header = RuleHeaderField(
         title=_(
-            u"label_rule_id",
-            default=u"Rule ID"
+            u"label_rule_header",
+            default=u"Rule header"
         ),
         required=False,
-        default=u""
+        default=DEFAULT_RULE_HEADER,
     )
 
-    directives.widget("title", style=u"width: 150px!important;")
-    title = schema.TextLine(
+    directives.widget("rule_body", style=u"width: 150px!important;")
+    rule_body = schema.Text(
         title=_(
-            u"label_rule_title",
-            default=u"Rule title"
+            u"label_rule_body",
+            default=u"Rule body"
         ),
         required=False,
         default=u""

@@ -2,42 +2,34 @@ import { createContext, useContext, useRef, useState } from 'react';
 import { WorksheetPresenterContext } from '../App.jsx';
 import {
     DEFAULT_LAYOUT_MODE,
-    DEFAULT_PREPOSITION_MODE,
     APP_LAYOUT_MODE, WIDGET_LAYOUT_MODE, HIDDEN_LAYOUT_MODE
 } from '../config.js';
 import AppControls from './AppControls.jsx';
+import WellsBlock from './WellsBlock.jsx';
 import Workspace from './Workspace.jsx';
-import { useClickOutsideRef, useShiftState, useEscape, useAnchorClick } from '../utils/hooks.jsx';
+import { useClickOutsideRef, useEscape, useAnchorClick } from '../utils/hooks.jsx';
 import { isWidget, isOpen, isContainered } from '../utils/helpers.js'
 
 export const AppContext = createContext({})
 
 
-function Layout( {startMode} ) {
+function Layout({ startMode }) {
     const presenter = useContext(WorksheetPresenterContext);
     const [mode, setMode] = useState(startMode || DEFAULT_LAYOUT_MODE);
     const [anchor, setAnchor] = useState(null);
     const containerRef = useRef(null);
-    const [shiftHeld, setShiftHeld] = useState(false);
-    const [isDragging, setIsDragging] = useState(false);
-    const [currentPreposition, setCurrentPreposition] = useState({});
-    const [prepositionMode, setPrepositionMode] = useState(DEFAULT_PREPOSITION_MODE);
+    const isDragging = useRef(false);
 
     const toggleAppMode = () => {
         const nextMode = isWidget(mode) ? APP_LAYOUT_MODE : WIDGET_LAYOUT_MODE;
         presenter.deselectAllWells();
-        if (nextMode === WIDGET_LAYOUT_MODE && !presenter.getNextAction()) {
-            setMode(HIDDEN_LAYOUT_MODE);
-        } else {
-            setMode(nextMode);
-        }
+        setMode(nextMode);
     };
 
     const onClose = () => {
         setMode(HIDDEN_LAYOUT_MODE);
         setAnchor(null);
         presenter.deselectAllWells();
-        presenter.cleanNextActionsUids();
     }
 
     const onEscape = () => {
@@ -45,37 +37,43 @@ function Layout( {startMode} ) {
     }
 
     const onAnchorClick = (event) => {
-        setAnchor(`--${event.detail.uid}`);
-        presenter.setNextAction(presenter.assignAnalyses.bind(presenter));
-        presenter.setNextAssignments([{ uid: event.detail.uid, wellIdx: null }]);
+        setAnchor(event.detail.uid);
         setMode(WIDGET_LAYOUT_MODE);
     }
 
     useAnchorClick(onAnchorClick);
-    useClickOutsideRef(containerRef, onClose);
-    useShiftState(setShiftHeld);
+    useClickOutsideRef(containerRef, !isContainered(mode) ? onClose : () => {} );
     useEscape(onEscape);
 
+    const { rowsCount, colsCount } = presenter.model;
     const layoutClass = mode === 'hidden' ? 'layout-default' : `layout-${mode}`;
+    const mainClass = mode === 'app' ? 'main main--fullscreen' : 'main';
     const layoutStyle = {
-        '--rows': presenter.model.rowsCount, '--cols': presenter.model.colsCount,
-        ...(anchor && { positionAnchor: anchor })
+        '--rows': rowsCount, '--cols': colsCount,
+        ...(anchor && { positionAnchor: `--${anchor}` })
     };
 
-    const appContext = {
-        mode, shiftHeld, isDragging, setIsDragging, currentPreposition, setCurrentPreposition,
-        prepositionMode, setPrepositionMode
-    };
+    const appContext = { mode, anchor, isDragging };
+
 
     return (
         isOpen(mode) && (
             <AppContext.Provider value={appContext}>
                 <div className={layoutClass} style={layoutStyle} ref={containerRef}>
-                    <div className="main">
+                    <div className={mainClass}>
                         {!isContainered(mode) &&
                             <AppControls onClose={onClose} toggleAppMode={toggleAppMode} mode={mode} />
                         }
-                        <Workspace mode={mode} />
+                        <div className='workspace'>
+
+                            {isWidget(mode) ?
+                                <>
+                                <div className="plate-container widget">
+                                    <WellsBlock rowsCount={rowsCount} colsCount={colsCount} />
+                                </div>
+                                </>
+                                : <Workspace rowsCount={rowsCount} colsCount={colsCount} />}
+                        </div>
                     </div>
                 </div>
             </AppContext.Provider>

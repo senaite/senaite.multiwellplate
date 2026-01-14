@@ -1,0 +1,79 @@
+<div xmlns="http://www.w3.org/1999/xhtml"
+     xmlns:tal="http://xml.zope.org/namespaces/tal"
+     xmlns:metal="http://xml.zope.org/namespaces/metal"
+     xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+     tal:omit-tag="">
+
+    <div tal:define="name     python:view.name;
+                   value      python:view.value;
+                   rule_id         python:value.get('id', '');
+                   rule_title  python:value.get('title', '');
+                   rule_description  python:value.get('description', '');
+                   rule_color  python:value.get('color', '');
+                   rule_applies_to  python:value.get('applies_to', '');
+                   klass      python:view.klass;
+                   mode_klass python:'{}-input'.format(klass);
+                   klass      python:' '.join([klass, mode_klass]);"
+       tal:attributes="class klass">
+
+    <div style="display: flex; flex-direction: column;">
+
+      <!-- RuleHeader: ID -->
+      <div class="col-auto"
+           tal:define="id string:${name}.id:record:str">
+        <label i18n:translate="rule_header_widget_label_id"
+               tal:attributes="for id">ID</label>
+        <input type="text"
+               tal:attributes="id id;
+                               name id;
+                               value rule_id;"/>
+      </div>
+
+      <!-- RuleHeader: Title -->
+      <div class="col-auto"
+           tal:define="id string:${name}.title:record:str">
+        <label i18n:translate="rule_header_widget_label_title"
+               tal:attributes="for id">Title</label>
+        <input type="text"
+               tal:attributes="id id;
+                               name id;
+                               value rule_title;"/>
+      </div>
+
+      <!-- RuleHeader: Description -->
+      <div class="col-auto"
+           tal:define="id string:${name}.description:record:str">
+        <label i18n:translate="rule_header_widget_label_description"
+               tal:attributes="for id">Description</label>
+        <input type="text"
+               tal:attributes="id id;
+                               name id;
+                               value rule_description;"/>
+      </div>
+
+      <!-- RuleHeader: Color -->
+      <div class="col-auto"
+           tal:define="id string:${name}.color:record:str">
+        <label i18n:translate="rule_header_widget_label_color"
+               tal:attributes="for id">Color</label>
+        <input type="text"
+               tal:attributes="id id;
+                               name id;
+                               value rule_color;"/>
+      </div>
+
+      <!-- RuleHeader: Applies to -->
+      <div class="col-auto"
+           tal:define="id string:${name}.applies_to:record:str">
+        <label i18n:translate="rule_header_widget_label_applies_to"
+               tal:attributes="for id">Applies to</label>
+        <input type="text"
+               tal:attributes="id id;
+                               name id;
+                               value rule_applies_to;"/>
+      </div>
+
+    </div>
+  </div>
+
+</div>

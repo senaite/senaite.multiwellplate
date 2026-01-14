@@ -1,14 +1,18 @@
-import { useContext } from 'react';
-import { AppContext } from '../Layout.jsx';
+import { useContext, useSyncExternalStore } from 'react';
+import { WorksheetPresenterContext } from '../../App.jsx';
 
 const PrepositionModeSwitch = () => {
+  const presenter = useContext(WorksheetPresenterContext);
+  const prepositionMode = useSyncExternalStore(
+    presenter.subscribe,
+    () => presenter.getPrepositionMode()
+  );
 
-    const { prepositionMode, setPrepositionMode } = useContext(AppContext);
   return (
     <div className="preposition-mode-switch">
       <button
         className={`switch-btn ${prepositionMode === 'row' ? 'active' : ''}`}
-        onClick={() => setPrepositionMode('row')}
+        onClick={() => presenter.setPrepositionMode('row')}
         aria-label="Rows preposition layout"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -22,7 +26,7 @@ const PrepositionModeSwitch = () => {
       </button>
       <button
         className={`switch-btn ${prepositionMode === 'col' ? 'active' : ''}`}
-        onClick={() => setPrepositionMode('col')}
+        onClick={() => presenter.setPrepositionMode('col')}
         aria-label="Columns preposition layout"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

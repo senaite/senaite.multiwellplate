@@ -9,69 +9,115 @@
   <title>plate-react</title>
   <script>
     document.multiwellplateConfig = {
-    rowsCount: 8,
-    colsCount: 12,
-    worksheetId: 'worksheet-123',
-    fields: {
+      rowsCount: 8,
+      colsCount: 12,
+      worksheetId: 'worksheet-123',
+      fields: {
         uid: {
-            "sortable": false,
-            "keyword": "uid",
-            "title": "UID",
-            "filterable": false,
-            "groupable": false,
-            "value": "obj.UID()",
-            "display_mode": "none"
+          "sortable": false,
+          "keyword": "uid",
+          "title": "UID",
+          "filterable": false,
+          "groupable": false,
+          "value": "obj.UID()",
+          "display_mode": "none"
         },
         keyword: {
-            "sortable": true,
-            "keyword": "keyword",
-            "title": "Service Keyword",
-            "filterable": true,
-            "groupable": true,
-            "display_mode": "title",
-            "value": "obj.Keyword"
+          "sortable": true,
+          "keyword": "keyword",
+          "title": "Service Keyword",
+          "filterable": true,
+          "groupable": true,
+          "display_mode": "title",
+          "value": "obj.Keyword"
         },
         sampleId: {
-            "sortable": true,
-            "keyword": "sampleId",
-            "title": "Sample ID",
-            "filterable": true,
-            "groupable": true,
-            "display_mode": "title",
-            "value": "obj.getRequest().getId()"
+          "sortable": true,
+          "keyword": "sampleId",
+          "title": "Sample ID",
+          "filterable": true,
+          "groupable": true,
+          "display_mode": "title",
+          "value": "obj.getRequest().getId()"
         },
         clientId: {
-            "sortable": true,
-            "keyword": "clientId",
-            "title": "Client ID",
-            "filterable": true,
-            "groupable": true,
-            "display_mode": "title",
-            "value": "obj.getRequest().getClient().getClientID()"
+          "sortable": true,
+          "keyword": "clientId",
+          "title": "Client ID",
+          "filterable": false,
+          "groupable": false,
+          "display_mode": "title",
+          "value": "obj.getRequest().getClient().getClientID()"
         },
         serviceTitle: {
-            "sortable": false,
-            "keyword": "serviceTitle",
-            "title": "Service Title",
-            "filterable": true,
-            "groupable": false,
-            "display_mode": "description",
-            "value": "obj.getService().Title()"
+          "sortable": false,
+          "keyword": "serviceTitle",
+          "title": "Service Title",
+          "filterable": true,
+          "groupable": false,
+          "display_mode": "description",
+          "value": "obj.getService().Title()"
         },
         clientName: {
-            "sortable": true,
-            "keyword": "clientName",
-            "title": "Client Name",
-            "filterable": true,
-            "groupable": true,
-            "display_mode": "description",
-            "value": "obj.getRequest().getClient().getClientTitle()"
+          "sortable": true,
+          "keyword": "clientName",
+          "title": "Client Name",
+          "filterable": true,
+          "groupable": true,
+          "display_mode": "description",
+          "value": "obj.getRequest().getClient().getClientTitle()"
         }
 
-    },
-    rules: [],
-    analyses: {
-        'uid-1': { wellIdx: 1, data: { keyword: 'kwrd-1', title: 'Lab Test 1', sampleType: 'epithelium', sampleId: 'S-001', clientId: 'AAA', clientName: 'Coca-Cola'} },
+      },
+      rules: {
+        "test_rule": {
+          "color": "#f0a0d0",
+          "body": {
+            conditions: {
+              all: [
+                {
+                  name: 'rule-applicapable-area-condition',
+                  fact: 'nextIdx',
+                  operator: 'in',
+                  value: {
+                    fact: 'all-ids',
+                  }
+                },
+                {
+                  any: [
+                    {
+                      name: 'empty-well-condition',
+                      fact: 'nextIdx',
+                      operator: 'in',
+                      value: {
+                        fact: 'empty-ids',
+                      }
+                    },
+                    {
+                      name: 'same-sampleid-only-condition',
+                      fact: 'well-data',
+                      params: {
+                        fieldName: 'sampleId'
+                      },
+                      operator: 'everyFact:equal',
+                      value: {
+                        fact: 'uid-data',
+                        path: '$.sampleId',
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            name: 'test-rule',
+            event: { type: 'well-empty' }
+          },
+          "description": "test",
+          "title": "main"
+        }
+      },
+      analyses: {
+        'uid-1': { wellIdx: 1, data: { keyword: 'kwrd-1', title: 'Lab Test 1', sampleType: 'epithelium', sampleId: 'S-001', clientId: 'AAA', clientName: 'Coca-Cola' } },
         'uid-2': { wellIdx: 48, data: { keyword: 'kwrd-1', title: 'Lab Test 1', sampleType: 'blood', sampleId: 'S-010', clientId: 'BBB', clientName: 'Apple' } },
         'uid-3': { wellIdx: 96, data: { keyword: 'kwrd-3', title: 'Lab Test 3', sampleType: 'blood', sampleId: 'S-017', clientId: 'BBB', clientName: 'Apple' } },
         'uid-4': { wellIdx: 20, data: { keyword: 'kwrd-3', title: 'Lab Test 3', sampleType: 'epithelium', sampleId: 'S-025', clientId: 'CCC', clientName: 'BMW' } },
@@ -109,9 +155,12 @@
         'uid-36': { data: { keyword: 'kwrd-6', title: 'Lab Test 6', sampleType: 'epithelium', sampleId: 'S-001', clientId: 'AAA', clientName: 'Coca-Cola' } },
         'uid-37': { data: { keyword: 'kwrd-7', title: 'Lab Test 7', sampleType: 'epithelium', sampleId: 'S-001', clientId: 'AAA', clientName: 'Coca-Cola' } },
         'uid-38': { data: { keyword: 'kwrd-8', title: 'Lab Test 8', sampleType: 'epithelium', sampleId: 'S-001', clientId: 'AAA', clientName: 'Coca-Cola' } },
-    },
-}
-    // JavaScript code placed directly in the head
+        'uid-39': { data: { keyword: 'kwrd-5', title: 'Lab Test 5', sampleType: 'epithelium', sampleId: 'S-150', clientId: 'BMW', clientName: 'BMW' } },
+        'uid-40': { data: { keyword: 'kwrd-6', title: 'Lab Test 6', sampleType: 'epithelium', sampleId: 'S-150', clientId: 'BMW', clientName: 'BMW' } },
+        'uid-41': { data: { keyword: 'kwrd-7', title: 'Lab Test 7', sampleType: 'epithelium', sampleId: 'S-151', clientId: 'BMW', clientName: 'BMW' } },
+        'uid-42': { data: { keyword: 'kwrd-8', title: 'Lab Test 8', sampleType: 'epithelium', sampleId: 'S-152', clientId: 'BMW', clientName: 'BMW' } },
+      },
+    }
     function emit_plate_event(event) {
       event.stopPropagation();
       const extEvent = new CustomEvent('senaite:multiwellplate:anchor-item-click', {
@@ -127,13 +176,19 @@
 <body>
   <div id="senaite-multiwellplate-app"></div>
   <div><img width=20% src="/plate_icon.svg" /></div>
-  <div class="an-item" uid="uid-1" style="anchor-name: --uid-1" onclick="emit_plate_event(event)">
-    <div id="uid-1">1</div><img width="20px" src="/micropipette_w_drop.svg" /></div>
-  <div class="an-item" uid="uid-2" style="anchor-name: --uid-2" onclick="emit_plate_event(event)">
-    <div id="uid-2">2</div><img width="20px" src="/micropipette_w_drop.svg" /></div>
-  <div class="an-item" uid="uid-3" style="anchor-name: --uid-3" onclick="emit_plate_event(event)">
-    <div id="uid-3">3</div><img width="20px" src="/micropipette_w_drop.svg" /></div>
-  <script type="module" src="/src/main.jsx"></script>
+  <div>Click on the buttons below to emit anchor item click events:</div>
+  <div style="display: flex; gap: 10px;flex-direction: column;">
+    <button class="an-item"  uid="uid-1" style="anchor-name: --uid-1" onclick="emit_plate_event(event)">
+      <span id="uid-1"></span><img width="20px" src="/micropipette_w_drop.svg" />
+    </button>
+    <button class="an-item" uid="uid-2" style="anchor-name: --uid-2" onclick="emit_plate_event(event)">
+      <span id="uid-2"></span><img width="20px" src="/micropipette_w_drop.svg" />
+    </button>
+    <button class="an-item" uid="uid-3" style="anchor-name: --uid-3" onclick="emit_plate_event(event)">
+      <span id="uid-3"></span><img width="20px" src="/micropipette_w_drop.svg" />
+    </button>
+  </div>
+  <script type="module" src="/app/main.jsx"></script>
 </body>
 
 </html>

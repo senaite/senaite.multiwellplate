@@ -18,6 +18,8 @@
 # Copyright 2025 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
+import json
+
 from bika.lims import api
 from bika.lims.interfaces import IDuplicateAnalysis
 from bika.lims.interfaces import IReferenceAnalysis
@@ -48,6 +50,7 @@ def implement_mwp_for_worksheet(worksheet):
         instance.setColsCount(ws_template.cols_count or 12)
         instance.setRowsCount(ws_template.rows_count or 8)
         instance.setFields(ws_template.fields or [])
+        instance.setRules(ws_template.rules or [])
         instance.setMultiWellPlate([])
     return
 
@@ -72,12 +75,15 @@ def get_mwp_config(worksheet):
 
     multiwellplate = IMultiWellPlateBehavior(worksheet)
     fields = {item["keyword"]: item for item in multiwellplate.getFields()}
+    cols_count = int(multiwellplate.getColsCount())
+    rows_count = int(multiwellplate.getRowsCount())
+
     config = {
-        "colsCount": multiwellplate.getColsCount(),
-        "rowsCount": multiwellplate.getRowsCount(),
+        "colsCount": cols_count,
+        "rowsCount": rows_count,
         "worksheetId": api.get_id(worksheet),
         "fields": fields,
-        "rules": [],
+        "rules": map_rules(multiwellplate.getRules(), cols_count, rows_count),
     }
     analyses = {}
     for an in worksheet.getAnalyses():
@@ -113,3 +119,64 @@ def get_analysis_data(multiwellplate, analysis):
         "wellIdx": multiwellplate.getWellNumberForAnalysis(an_uid),
         "data": default_data,
     }
+
+
+def map_rules(rules, cols_count, rows_count):
+    mapped_rules = {}
+    for r in rules:
+        header = r.get("rule_header", {})
+        title = header.get("title", "")
+        body = {}
+
+        try:
+            body = json.loads(r.get("rule_body", ""))
+        except Exception as exc:
+            err = "Error parsing the rule body: {}".format(exc)
+            logger.error(err)
+
+        wells_count = cols_count * rows_count
+        default_range = "1-{}".format(wells_count)
+        applies_to = header.get("applies_to", "") or default_range
+      
+        mapped_rules[header.get("id")] = {
+            "title": title,
+            "description": header.get("description", ""),
+            "color": header.get("color", ""),
+            "body": {
+                "event": {"type": "well"},
+                "name": title,
+                "conditions": {
+                    "all": [
+                        build_applicability_precondition(applies_to),
+                        body,
+                    ]
+                }
+            }
+        }
+    
+    return mapped_rules
+
+
+def parse_numbers(applies_to):
+    result = []
+
+    for part in applies_to.split(","):
+        part = part.strip()
+        if "-" in part:
+            start, end = part.split("-", 1)
+            result.extend(range(int(start), int(end) + 1))
+        else:
+            result.append(int(part))
+
+    return list(set(result))
+
+
+def build_applicability_precondition(applies_to):
+    applicabibility_precondition = {
+        "name": "rule-applicapable-area-condition",
+        "fact": "nextIdx",
+        "operator": "in",
+        "value": parse_numbers(applies_to),
+    }
+
+    return applicabibility_precondition

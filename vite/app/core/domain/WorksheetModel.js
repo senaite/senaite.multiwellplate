@@ -1,3 +1,4 @@
+import { Engine } from 'json-rules-engine';
 
 
 class WorksheetModel {
@@ -7,6 +8,7 @@ class WorksheetModel {
         this.rowsCount = 0;
         this.colsCount = 0;
         this.selectedAnalyses = null;
+        this.engine = new Engine([], { cache: true, replaceFactsInEventParams: true });
     }
 
     setData(data) {

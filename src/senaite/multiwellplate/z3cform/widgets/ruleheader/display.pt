@@ -1,0 +1,23 @@
+<div xmlns="http://www.w3.org/1999/xhtml"
+     xmlns:tal="http://xml.zope.org/namespaces/tal"
+     xmlns:metal="http://xml.zope.org/namespaces/metal"
+     xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+     tal:omit-tag="">
+
+    <div tal:define="name       python:view.name;
+                   klass      python:view.klass;
+                   mode_klass python:'{}-display'.format(klass);
+                   klass      python:' '.join([klass, mode_klass]);"
+       tal:attributes="class klass">
+
+    <span tal:define="value view/value">
+        ID: <span tal:replace="value/id | nothing"/><br>
+        Title: <span tal:replace="value/title | nothing"/><br>
+        Description: <span tal:replace="value/description | nothing"/><br>
+        Color: <span tal:replace="value/color | nothing"/><br>
+        Applies to: <span tal:replace="value/applies_to | nothing"/><br>
+    </span>
+
+  </div>
+
+</div>

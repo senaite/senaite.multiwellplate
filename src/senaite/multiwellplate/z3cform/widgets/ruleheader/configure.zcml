@@ -1,0 +1,41 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:z3c="http://namespaces.zope.org/z3c"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    i18n_domain="z3c.form">
+
+    <!-- Address Widget -->
+  <adapter
+      factory=".widget.RuleHeaderWidgetFactory"
+      for="senaite.multiwellplate.schema.interfaces.IRuleHeaderField
+           senaite.multiwellplate.interfaces.ISenaiteMultiWellPlateLayer"
+  />
+
+    <!-- RuleHeader data converter between field and widget -->
+    <adapter factory=".widget.RuleHeaderDataConverter" />
+
+    <!-- RuleHeader input widget template -->
+    <z3c:widgetTemplate
+        mode="input"
+        widget=".widget.RuleHeaderWidget"
+        template="input.pt"
+        layer="senaite.multiwellplate.interfaces.ISenaiteMultiWellPlateLayer"
+    />
+
+    <!-- RuleHeader display widget template -->
+    <z3c:widgetTemplate
+        mode="display"
+        widget=".widget.RuleHeaderWidget"
+        template="display.pt"
+        layer="senaite.multiwellplate.interfaces.ISenaiteMultiWellPlateLayer"
+    />
+
+    <!-- RuleHeader hidden widget template -->
+    <z3c:widgetTemplate
+        mode="hidden"
+        widget=".widget.RuleHeaderWidget"
+        template="hidden.pt"
+        layer="senaite.multiwellplate.interfaces.ISenaiteMultiWellPlateLayer"
+    />
+
+</configure>

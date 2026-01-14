@@ -1,17 +1,67 @@
-import { useContext, useEffect, useRef, useState } from 'react';
-import { useDraggable } from "@dnd-kit/core";
+import { useContext, useState, useSyncExternalStore } from 'react';
+import { useDraggable } from "@dnd-kit/react";
 import { AppContext } from './Layout.jsx';
 import { WorksheetPresenterContext } from '../App.jsx';
-import { useSelectAllShortcut } from '../utils/hooks.jsx';
-import { cleanAndJoinClasses } from '../utils/helpers.js';
 
 
-function SideList({ ref, onFocus, isActive }) {
+function SideListDraggableItem({ item, isSelected, isDragging, fieldConfig, presenter }) {
+    const { ref: setDraggableNodeRef, handleRef: setHandleNodeRef } = useDraggable({
+        id: item,
+        disabled: !isSelected,
+        data: { type: 'unassigned', uid: item },
+    });
+
+    const data = item.data;
+
+    const handleItemClick = () => {
+        if (isSelected) {
+            presenter.deselect(item.uid);
+        } else {
+            presenter.select(item.uid);
+        }
+    };
+
+    return (
+        <button
+            key={item}
+            onClick={() => handleItemClick(item)}
+            ref={node => { setDraggableNodeRef(node); setHandleNodeRef(node); }}
+            className={`item-card
+                        ${isSelected ? 'selected' : ''}
+                        ${isSelected && isDragging ? 'dragging' : ''}`}
+        >
+            <div className="item-content">
+                <div className="item-info">
+                    <div className="item-name">
+                        {Object.entries(data).map(([key, value]) => {
+                            if (!['both', 'title'].includes(fieldConfig[key]?.display_mode)) return null;
+                            return <span key={key} className={`name-${key}`}>{value}&nbsp;</span>
+                        })}
+                    </div>
+                    <div className="item-meta">
+                        {Object.entries(data).map(([key, value]) => {
+                            if (!['both', 'description'].includes(fieldConfig[key]?.display_mode)) return null;
+                            return <span key={key} className={`meta-${key}`}>{value}&nbsp;</span>
+                        })}
+                    </div>
+                </div>
+                {isSelected && (
+                    <div className="checkmark">
+                        <svg fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                )}
+            </div>
+        </button>
+    );
+}
+
+function SideList({ ref, onFocus }) {
 
     const { isDragging } = useContext(AppContext);
 
     const presenter = useContext(WorksheetPresenterContext);
-    const [activeTab, setActiveTab] = useState('analyses');
     const [showFilters, setShowFilters] = useState(false);
     const [filters, setFilters] = useState({
         search: '',
@@ -20,63 +70,55 @@ function SideList({ ref, onFocus, isActive }) {
             sortBy: '',
             sortOrder: 'asc'
         },
-        substances: {
-        }
     });
 
-    const currentData = activeTab === 'analyses' ? presenter.getAnalysesUids() : [];
+    const listUnassigned = useSyncExternalStore(presenter.subscribe, () => presenter.getUnassignedListSnapshot());
+
     const fieldConfig = presenter.getConfig().fields;
 
-    const getUniqueValues = (key) => {
-        return [...new Set(currentData.map(item => item[key]))];
+    // Apply sorting to items
+    const getSortedItems = (items) => {
+        if (!filters.analyses.sortBy) return items;
+
+        return [...items].sort((a, b) => {
+            const aValue = a.data[filters.analyses.sortBy] || '';
+            const bValue = b.data[filters.analyses.sortBy] || '';
+
+            const comparison = aValue.toString().localeCompare(bValue.toString(), undefined, { numeric: true });
+            return filters.analyses.sortOrder === 'asc' ? comparison : -comparison;
+        });
     };
 
-    const listItems = presenter.getAnalysesUids();
-    const isSelected = (uid) => presenter.getSelectedUnassigned().includes(uid);
-    const isAssigned = (uid) => !presenter.getUnassignedAnalysesUids().includes(uid)
-
-    const handleItemClick = (uid) => {
-        if (isSelected(uid)) {
-            const arr = new Set(presenter.getSelectedUnassigned());
-            arr.delete(uid);
-            presenter.setSelectedUnassigned(arr);
-        } else {
-            presenter.setSelectedUnassigned(new Set(presenter.getSelectedUnassigned()).add(uid));
+    // Apply grouping to items
+    const getGroupedItems = (items) => {
+        if (!filters.analyses.groupBy) {
+            return { '': items };
         }
-    }
 
+        const groups = {};
+        items.forEach(item => {
+            const groupValue = item.data[filters.analyses.groupBy] || 'Ungrouped';
+            if (!groups[groupValue]) {
+                groups[groupValue] = [];
+            }
+            groups[groupValue].push(item);
+        });
 
-    useSelectAllShortcut(() => (isActive && activeTab === 'analyses') && presenter.setSelectedUnassigned(presenter.search(filters.search).filter(uid => !isAssigned(uid))))
+        console.log('Grouped Items:', groups);
+        return groups;
+    };
+
+    // Process items: filter, sort, then group
+    const filteredItems = listUnassigned.filter(item =>
+        presenter.search(filters.search).includes(item.uid)
+    );
+    const sortedItems = getSortedItems(filteredItems);
+    const groupedItems = getGroupedItems(sortedItems);
 
     return (
         <div className="side-list-wrapper" ref={ref} onFocus={onFocus}>
             <div className="sidelist-header">
-                <h2 className="sidelist-title">Setup</h2>
-            </div>
-            <div className="tabs-container side-list__tabs-container">
-                <button
-                    onClick={() => {
-                        setActiveTab('analyses');
-                        setFilters(prev => ({ ...prev, search: '' }));
-                        setShowFilters(false);
-                    }}
-                    className={`tab-button ${activeTab === 'analyses' ? 'active' : ''}`}
-                >
-                    <span className="tab-icon">🧪</span>
-                    Analyses
-                </button>
-                <button
-                    onClick={() => {
-                        setActiveTab('substances');
-                        setFilters(prev => ({ ...prev, search: '' }));
-                        setShowFilters(false);
-                    }}
-                    className={`tab-button ${activeTab === 'substances' ? 'active' : ''}`}
-                    disabled
-                >
-                    <span className="tab-icon">⚗️</span>
-                    Substances
-                </button>
+                <h3 className="sidelist-title">Analyses</h3>
             </div>
             <div className="search-section">
                 <div className="search-wrapper">
@@ -85,7 +127,7 @@ function SideList({ ref, onFocus, isActive }) {
                     </svg>
                     <input
                         type="text"
-                        placeholder={`Search ${activeTab}...`}
+                        placeholder="Search Analyses..."
                         value={filters.search}
                         onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
                         className="search-input"
@@ -110,123 +152,88 @@ function SideList({ ref, onFocus, isActive }) {
 
                 {showFilters && (
                     <div className="filters-panel">
-                        {activeTab === 'analyses' ? (
-                            <>
-                                <div className="filter-group">
-                                    <label className="filter-label">Type</label>
-                                    <select
-                                        value={filters.analyses.type}
-                                        onChange={(e) => setFilters({
-                                            ...filters,
-                                            analyses: { ...filters.analyses, type: e.target.value }
-                                        })}
-                                        className="filter-select"
-                                    >
-                                        <option value="all">All Types</option>
-                                        {getUniqueValues('type').map(type => (
-                                            <option key={type} value={type}>{type}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="filter-group">
-                                    <label className="filter-label">Status</label>
-                                    <select
-                                        value={filters.analyses.status}
-                                        onChange={(e) => setFilters({
-                                            ...filters,
-                                            analyses: { ...filters.analyses, status: e.target.value }
-                                        })}
-                                        className="filter-select"
-                                    >
-                                        <option value="all">All Status</option>
-                                        <option value="active">Active</option>
-                                        <option value="inactive">Inactive</option>
-                                    </select>
-                                </div>
-                            </>
-                        ) : (
-                            <div className="filter-group">
-                                <label className="filter-label">Category</label>
+                        <div className="filter-group">
+                            <label className="filter-label">Sort By</label>
+                            <div className="filter-row">
                                 <select
-                                    value={filters.substances.category}
+                                    value={filters.analyses.sortBy}
                                     onChange={(e) => setFilters({
                                         ...filters,
-                                        substances: { ...filters.substances, category: e.target.value }
+                                        analyses: { ...filters.analyses, sortBy: e.target.value }
                                     })}
                                     className="filter-select"
                                 >
-                                    <option value="all">All Categories</option>
-                                    {getUniqueValues('category').map(cat => (
-                                        <option key={cat} value={cat}>{cat}</option>
+                                    <option value="">None</option>
+                                    {Object.entries(fieldConfig).filter(([field, config]) => config.sortable).map(([field, config]) => (
+                                        <option key={field} value={field}>{config.title || field}</option>
                                     ))}
                                 </select>
+                                {filters.analyses.sortBy && (
+                                    <button
+                                        onClick={() => setFilters({
+                                            ...filters,
+                                            analyses: {
+                                                ...filters.analyses,
+                                                sortOrder: filters.analyses.sortOrder === 'asc' ? 'desc' : 'asc'
+                                            }
+                                        })}
+                                        className="sort-order-toggle"
+                                        aria-label="Toggle sort order"
+                                    >
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            {filters.analyses.sortOrder === 'asc' ? (
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                                            ) : (
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
+                                            )}
+                                        </svg>
+                                    </button>
+                                )}
                             </div>
-                        )}
+                        </div>
+                        <div className="filter-group">
+                            <label className="filter-label">Group By</label>
+                            <select
+                                value={filters.analyses.groupBy}
+                                onChange={(e) => setFilters({
+                                    ...filters,
+                                    analyses: { ...filters.analyses, groupBy: e.target.value }
+                                })}
+                                className="filter-select"
+                            >
+                                <option value="">None</option>
+                                {Object.entries(fieldConfig).filter(([field, config]) => config.groupable).map(([field, config]) => (
+                                    <option key={field} value={field}>{config.title || field}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                 )}
             </div>
             <div className="side-list">
                 <div className="items-count">
-                    {presenter.search(filters.search).filter(uid => !isAssigned(uid)).length} {activeTab} found
+                    {filteredItems.length} found
                 </div>
-                {listItems.map(item => {
-                    const { attributes, listeners, setNodeRef }
-                        = useDraggable({
-                            id: item,
-                            disabled: !isSelected,
-                            data: { type: 'unassigned', uid: item },
-                        });
-                    const data = presenter.getDataByUid(item);
-                    const isFiltered = presenter.search(filters.search).includes(item) && !isAssigned(item)
-                    return (
-                        <button
-                            key={item}
-                            onClick={() => handleItemClick(item)}
-                            ref={setNodeRef} {...listeners} {...attributes}
-                            className={`item-card 
-                                        ${isSelected(item) ? 'selected' : ''} 
-                                        ${isSelected(item) && isDragging ? 'dragging' : ''}
-                                        ${isAssigned(item) || !isFiltered ? 'filtered' : ''}`}
-                        >
-                            <div className="item-content">
-                                <div className="item-info">
-                                    {activeTab === 'analyses' ? (
-                                        <>
-                                            <div className="item-name">
-                                                {Object.entries(data).map(([key, value]) => {
-                                                    if (!['both', 'title'].includes(fieldConfig[key]?.display_mode)) return null;
-                                                    return <span key={key} className={`name-${key}`}>{value}&nbsp;</span>
-                                                })}
-                                            </div>
-                                            <div className="item-meta">
-                                                {Object.entries(data).map(([key, value]) => {
-                                                    if (!['both', 'description'].includes(fieldConfig[key]?.display_mode)) return null;
-                                                    return <span key={key} className={`meta-${key}`}>{value}&nbsp;</span>
-                                                })}
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <div className="item-name">{item.name}</div>
-                                            <div className="item-meta">
-                                                <span className="badge">{item.category}</span>
-                                                <span>{item.concentration}</span>
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                                {presenter.getSelectedUnassigned().includes(item) && (
-                                    <div className="checkmark">
-                                        <svg fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path d="M5 13l4 4L19 7"></path>
-                                        </svg>
-                                    </div>
-                                )}
+                {Object.entries(groupedItems).map(([groupName, items]) => (
+                    <div key={groupName} className="group-section">
+                        {groupName && (
+                            <div className="group-header">
+                                <div className="group-title">{groupName}</div>
+                                <div className="group-count">{items.length}</div>
                             </div>
-                        </button>
-                    )
-                }
-                )}
+                        )}
+                        {items.map(item => (
+                            <SideListDraggableItem
+                                key={item.uid}
+                                item={item}
+                                isSelected={item.isSelected}
+                                isDragging={isDragging.current}
+                                fieldConfig={fieldConfig}
+                                presenter={presenter}
+                            />
+                        ))}
+                    </div>
+                ))}
 
             </div>
         </div>

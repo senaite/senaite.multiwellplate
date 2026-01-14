@@ -1,5 +1,5 @@
 
-import PrepositionModeSwitch from "./Controls/PrepositionModeSwitch.jsx";
+import PrepositionModeSwitch from "./PrepositionModeSwitch.jsx";
 
 
 function PlateTools({ref}) {

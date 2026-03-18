@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2025 by it's authors.
+# Copyright 2026 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from plone.supermodel.model import Fieldset
@@ -28,6 +28,7 @@ from zope.schema import getFieldsInOrder
 from zope.component import adapter
 from zope.interface import implementer
 
+from senaite.multiwellplate import is_installed
 from senaite.multiwellplate import messageFactory as _
 from senaite.multiwellplate.schema import MultiWellPlateConfigSchema
 

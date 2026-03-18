@@ -13,26 +13,24 @@ function WidgetWellWrapper({ idx, assignedAnalyses, anchor }) {
 
     useEffect(() => {
         async function doEval() {
-            const res = await presenter.evaluateRules({
+            return presenter.evaluateRules({
                 nextIdx: idx,
                 uid: anchor,
-                prepositioned : {}
-            });          
-            setRuleEval(res);
+                prepositioned: {}
+            });
         };
-        doEval();
+        doEval().then((overallPass) => setRuleEval(overallPass));
     }, []);
 
     const onWellClick = () => {
-        if (!!ruleEval?.events?.length) {
+        if (ruleEval) {
             presenter.setNextAction(presenter.assignAnalyses.bind(presenter));
             presenter.setNextAssignments([{ uid: anchor, wellIdx: idx }]);
             presenter.doNextAction();
         }
-
     };
 
-    return <Well idx={idx} onWellClick={onWellClick} assignedAnalyses={assignedAnalyses} isAssignable={(!!ruleEval?.events?.length)} />;
+    return <Well idx={idx} onWellClick={onWellClick} assignedAnalyses={assignedAnalyses} isAssignable={ruleEval} />;
 }
 
 function AppWellWrapper({ idx, isSelectable, isSelected, assignedAnalyses, prepositionedItems, selectedAnalyses }) {
@@ -60,15 +58,12 @@ function AppWellWrapper({ idx, isSelectable, isSelected, assignedAnalyses, prepo
     };
 
     const onAnalysisClick = (e, analysisUid) => {
-        console.log('click', analysisUid);
         e.stopPropagation();
         if (selectedAnalyses.includes(analysisUid)) {
-            presenter.setSelectedAnalyses(
-                selectedAnalyses.filter(uid => uid !== analysisUid)
-            );
+            presenter.deselect(analysisUid);
             return;
         }
-        presenter.setSelectedAnalyses([...selectedAnalyses, analysisUid]);
+        presenter.select(analysisUid);
     };
 
     return (
@@ -108,10 +103,11 @@ function WellWrapper({ idx }) {
     const { mode, anchor } = useContext(AppContext);
     const wellData = useSyncExternalStore(presenter.subscribe, () => presenter.getWellDataSnapshot(idx));
 
-    return isWidget(mode) ? <WidgetWellWrapper
-        idx={idx}
-        assignedAnalyses={wellData.assignedAnalyses}
-        anchor={anchor} />
+    return isWidget(mode) ?
+        <WidgetWellWrapper
+            idx={idx}
+            assignedAnalyses={wellData.assignedAnalyses}
+            anchor={anchor} />
         :
         <AppWellWrapper idx={idx} {...wellData} />;
     ;

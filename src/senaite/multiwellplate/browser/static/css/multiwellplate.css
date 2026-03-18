@@ -15,3 +15,7 @@ img.multiwellplate-control {
     line-height: 1;
     overflow: hidden;
 }
+
+.Well {
+    max-width: 6ch;
+}

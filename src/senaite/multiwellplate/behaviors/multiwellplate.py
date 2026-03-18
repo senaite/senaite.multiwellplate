@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2025 by it's authors.
+# Copyright 2026 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from AccessControl import ClassSecurityInfo
@@ -80,6 +80,12 @@ class MultiWellPlateFactory(object):
 
     def __init__(self, context):
         self.context = context
+
+    @security.protected(permissions.View)
+    def getParent(self):
+        """Return the Worksheet when implemented MultiWellPlateBehavior
+        """
+        return self.context
 
     @security.private
     def accessor(self, fieldname, raw=False):

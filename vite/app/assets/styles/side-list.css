@@ -23,43 +23,6 @@
   letter-spacing: 0.05em;
 }
 
-.tabs-container {
-  display: flex;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.tab-button {
-  flex: 1;
-  padding: 0.5rem 0;
-  font-size: 0.875rem;
-  font-weight: 500;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: #6b7280;
-  border-bottom: 2px solid transparent;
-}
-
-.tab-button:hover {
-  color: #1f2937;
-  background-color: #f9fafb;
-}
-
-.tab-button.active {
-  color: #2563eb;
-  background-color: #eff6ff;
-  border-bottom: 2px solid #2563eb;
-}
-
-.tab-icon {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  margin-right: 0.5rem;
-  vertical-align: middle;
-}
-
 .search-section {
   padding: 0.75rem 1rem;
   background: white;
@@ -251,6 +214,14 @@
   margin-bottom: 0.25rem;
 }
 
+.group-header:hover {
+  border-color: #e5e7eb;
+  background-color: #fafafa;
+  transform: translateX(2px);
+  border-left: 3px solid #3b82f6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
 .group-title {
   font-size: 0.75rem;
   font-weight: 600;
@@ -366,3 +337,196 @@
 .item-card.filtered {
   display: none;
 }
+
+/* ── MultiSelectDropdown ─────────────────────────────────────────────────── */
+
+.msd-wrapper {
+  width: 100%;
+}
+
+/* Trigger button */
+.msd-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  width: 100%;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.8125rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background: white;
+  color: #374151;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.msd-trigger:hover {
+  border-color: #9ca3af;
+}
+
+.msd-trigger--open {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.msd-trigger--active {
+  border-color: #3b82f6;
+}
+
+.msd-trigger-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Selected-count badge inside the trigger */
+.msd-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 0.3rem;
+  background: #3b82f6;
+  color: white;
+  font-size: 0.625rem;
+  font-weight: 700;
+  border-radius: 999px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.msd-chevron {
+  flex-shrink: 0;
+  color: #9ca3af;
+  transition: transform 0.15s;
+}
+
+.msd-chevron--open {
+  transform: rotate(180deg);
+}
+
+/* Expanded panel */
+.msd-panel {
+  margin-top: 0.25rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+}
+
+/* Container for the draggable selected items */
+.msd-list {
+  padding: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+/* Individual row */
+.msd-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3125rem 0.5rem;
+  border-radius: 0.25rem;
+  transition: background 0.1s;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.msd-item--sel {
+  background: #eff6ff;
+}
+
+.msd-item--sel:hover {
+  background: #dbeafe;
+}
+
+/* Faded appearance for the item being dragged */
+.msd-item--dragging {
+  opacity: 0.4;
+}
+
+/* Unselected items hover */
+.msd-item:not(.msd-item--sel):hover {
+  background: #f9fafb;
+}
+
+/* ── Drag handle ── */
+.msd-handle {
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #9ca3af;
+  cursor: grab;
+  border-radius: 3px;
+}
+
+.msd-handle:hover {
+  color: #3b82f6;
+  background: #dbeafe;
+  cursor: grab;
+}
+
+.msd-handle:active {
+  cursor: grabbing;
+}
+
+/* Placeholder spacer so unselected items align with selected */
+.msd-handle-ph {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 16px;
+}
+
+/* ── Checkbox ── */
+.msd-checkbox {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+/* ── Label ── */
+.msd-label {
+  flex: 1;
+  font-size: 0.8125rem;
+  color: #1f2937;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.msd-item--sel .msd-label {
+  font-weight: 500;
+}
+
+/* ── Separator between selected / unselected ── */
+.msd-sep {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 0.125rem 0.5rem;
+}
+
+/* ── Empty state ── */
+.msd-empty {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* filter-row alignment when MultiSelectDropdown is used alongside sort toggle */
+.filter-row {
+  align-items: flex-start;
+}
+

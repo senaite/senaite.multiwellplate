@@ -1,0 +1,81 @@
+<div
+    tal:omit-tag=""
+    tal:define="enabled python:view.show();
+                number_of_wells python:view.getNumberOfWells();
+                assigned_analyses python:view.getAssignedAnalyses();"
+    tal:condition="python:enabled"
+    i18n:domain="senaite.multiwellplate">
+
+    <div id="senaite-multiwellplate-info">
+        <style>
+            .mwp-info-block {
+                width: fit-content;
+                background-color: #d1ecf1;
+                color: #0c5460;
+                border: 1px solid #bee5eb;
+                border-radius: .25rem;
+                margin-bottom: 1rem;
+                padding: .75rem 1.25rem;
+            }
+            .mwp-info-block.warning-assign {
+                background-color: #fff3cd;
+                border-color: #ffeeba;
+                color: #856404;
+            }
+            .info-item .item-value {
+                font-weight: 600;
+            }
+        </style>
+
+        <script>
+            function registerAddAnalysesObserver(rootElement, infoBlock) {
+                const checkboxes = rootElement.querySelectorAll("input[name='uids:list']");
+                const selected = Array.from(checkboxes).filter(item => item.checked);
+                const assigned = parseInt(infoBlock.dataset.assignedAnalyses);
+                const numberOfWells = parseInt(infoBlock.dataset.numberOfWells);
+                const isWarning = (selected.length + assigned) > numberOfWells;
+                if (isWarning) {
+                    infoBlock.classList.add("warning-assign");
+                } else if (infoBlock.classList.contains("warning-assign")) {
+                    infoBlock.classList.remove("warning-assign");
+                }
+                document.getElementById("value-selected-analyses").textContent = selected.length;
+            }
+            document.addEventListener("listing:loaded", (event) => {
+                const rootElement = event.detail.root_el;
+                const infoBlock = document.getElementsByClassName("mwp-info-block")[0];
+                let addAnalysesObserver = new MutationObserver(function(mut) {
+                    registerAddAnalysesObserver(rootElement, infoBlock);
+                });
+                if (rootElement) {
+                    const configObserve = {childList: true, subtree: true};
+                    addAnalysesObserver.observe(rootElement, configObserve);
+                }
+            });
+        </script>
+
+        <div tal:attributes="data-number-of-wells python:number_of_wells;
+                             data-assigned-analyses python:assigned_analyses;"
+             class="mwp-info-block">
+            <div class="info-item number-wells">
+                <span class="item-title" i18n:translate="info_block_number_of_wells">
+                    Number of wells:
+                </span>
+                <span class="item-value" tal:content="python:number_of_wells">96</span>
+            </div>
+            <div class="info-item assigned-analyses">
+                <span class="item-title" i18n:translate="info_block_assigned_analyses">
+                    Assigned analyses:
+                </span>
+                <span class="item-value" tal:content="python:assigned_analyses">0</span>
+            </div>
+            <div class="info-item selected-analyses">
+                <span class="item-title" i18n:translate="info_block_selected_analyses">
+                    Selected analyses:
+                </span>
+                <span id="value-selected-analyses" class="item-value">0</span>
+            </div>
+        </div>
+    </div>
+
+</div>

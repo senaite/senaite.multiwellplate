@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2025 by it's authors.
+# Copyright 2026 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import json
@@ -23,11 +23,13 @@ import json
 from collections import OrderedDict
 
 from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
+from plone.memoize import view
 from senaite.core.browser.worksheets.worksheet import AnalysesView
 from senaite.core.browser.worksheets.worksheet import ManageResultsView
 from senaite.core.interfaces import IWorksheetLayouts
 from zope.interface import implements
 
+from senaite.multiwellplate import is_installed
 from senaite.multiwellplate import messageFactory as _
 from senaite.multiwellplate.behaviors import IPlateable
 from senaite.multiwellplate.behaviors import IMultiWellPlateBehavior
@@ -41,6 +43,10 @@ class MultiWellPlateWorksheetView(AnalysesView):
     def __init__(self, context, request):
         super(MultiWellPlateWorksheetView, self).__init__(context, request)
         self.multiwell_enabled = True
+        if not is_installed():
+            self.multiwell_enabled = False
+            return
+
         if not IPlateable.providedBy(self.context):
             self.multiwell_enabled = False
             return
@@ -57,6 +63,25 @@ class MultiWellPlateWorksheetView(AnalysesView):
             }),
         ))
         self.columns.update(new_columns)
+
+    @view.memoize
+    def get_default_columns_order(self):
+        columns = (super(MultiWellPlateWorksheetView, self)
+                   .get_default_columns_order())
+
+        if not self.multiwell_enabled:
+            return columns
+
+        new_order = []
+        inserted = False
+        for c in columns:
+            new_order.append(c)
+            if c == "Pos":
+                new_order.append("Well")
+                inserted = True
+        if not inserted:
+            new_order.append("Well")
+        return new_order
 
     def folderitem(self, obj, item, index):
         item = super(MultiWellPlateWorksheetView, self).folderitem(obj, item,

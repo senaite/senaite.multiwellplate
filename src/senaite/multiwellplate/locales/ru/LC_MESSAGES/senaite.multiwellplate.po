@@ -13,3 +13,18 @@ msgstr ""
 "Language-Name: English\n"
 "Preferred-Encodings: utf-8 latin1\n"
 "Domain: DOMAIN\n"
+
+#. Default: "Number of wells:"
+#: senaite/multiwellplate/browser/viewlets/templates/mwp-info.pt:31
+msgid "info_block_number_of_wells"
+msgstr "Количество ячеек:"
+
+#. Default: "Assigned analyses:"
+#: senaite/multiwellplate/browser/viewlets/templates/mwp-info.pt:38
+msgid "info_block_assigned_analyses"
+msgstr "Назначенные анализы:"
+
+#. Default: "Selected analyses:"
+#: senaite/multiwellplate/browser/viewlets/templates/mwp-info.pt:44
+msgid "info_block_selected_analyses"
+msgstr "Выбранные анализы:"

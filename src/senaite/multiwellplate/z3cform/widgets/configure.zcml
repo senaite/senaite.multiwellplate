@@ -3,6 +3,7 @@
     i18n_domain="senaite.core">
 
   <!-- package includes -->
+  <include package=".hidden" />
   <include package=".ruleheader" />
 
 </configure>

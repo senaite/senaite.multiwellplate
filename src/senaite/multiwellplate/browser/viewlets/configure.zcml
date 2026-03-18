@@ -33,4 +33,23 @@
             layer="senaite.multiwellplate.interfaces.ISenaiteMultiWellPlateLayer"
     />
 
+    <browser:viewlet
+            name="senaite.multiwellplate.worksheettemplate.edit"
+            for="senaite.core.interfaces.IWorksheetTemplate"
+            manager="plone.app.layout.viewlets.interfaces.IHtmlHead"
+            class="senaite.core.browser.viewlets.resources.ResourcesViewlet"
+            template="templates/edit-worksheettemplate-resources.pt"
+            permission="zope2.View"
+            layer="senaite.multiwellplate.interfaces.ISenaiteMultiWellPlateLayer"
+    />
+
+    <browser:viewlet
+            name="senaite.multiwellplate.addanalyses.info"
+            for="senaite.multiwellplate.behaviors.IPlateable"
+            class=".mwp_info.MwpInfoMessage"
+            manager="plone.app.layout.viewlets.interfaces.IAboveContentBody"
+            permission="zope2.View"
+            layer="senaite.multiwellplate.interfaces.ISenaiteMultiWellPlateLayer"
+    />
+
 </configure>

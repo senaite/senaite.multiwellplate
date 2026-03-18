@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2025 by it's authors.
+# Copyright 2026 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 import json
@@ -83,7 +83,7 @@ def get_mwp_config(worksheet):
         "rowsCount": rows_count,
         "worksheetId": api.get_id(worksheet),
         "fields": fields,
-        "rules": map_rules(multiwellplate.getRules(), cols_count, rows_count),
+        "rules": build_rules_list(multiwellplate.getRules(), cols_count, rows_count),
     }
     analyses = {}
     for an in worksheet.getAnalyses():
@@ -121,8 +121,8 @@ def get_analysis_data(multiwellplate, analysis):
     }
 
 
-def map_rules(rules, cols_count, rows_count):
-    mapped_rules = {}
+def build_rules_list(rules, cols_count, rows_count):
+    rules_list = []
     for r in rules:
         header = r.get("rule_header", {})
         title = header.get("title", "")
@@ -137,24 +137,21 @@ def map_rules(rules, cols_count, rows_count):
         wells_count = cols_count * rows_count
         default_range = "1-{}".format(wells_count)
         applies_to = header.get("applies_to", "") or default_range
-      
-        mapped_rules[header.get("id")] = {
-            "title": title,
+
+        rules_list.append({
+            "event": {"type": "mwp"},
+            "name": title,
             "description": header.get("description", ""),
             "color": header.get("color", ""),
-            "body": {
-                "event": {"type": "well"},
-                "name": title,
-                "conditions": {
-                    "all": [
-                        build_applicability_precondition(applies_to),
-                        body,
-                    ]
-                }
+            "conditions": {
+                "all": list(filter(None, [
+                    build_applicability_precondition(applies_to),
+                    body,
+                ]))
             }
-        }
-    
-    return mapped_rules
+        })
+
+    return rules_list
 
 
 def parse_numbers(applies_to):
@@ -176,6 +173,7 @@ def build_applicability_precondition(applies_to):
         "name": "rule-applicapable-area-condition",
         "fact": "nextIdx",
         "operator": "in",
+        "type": "precondition",
         "value": parse_numbers(applies_to),
     }
 

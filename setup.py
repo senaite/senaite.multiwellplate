@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 version = "1.0.0"
 
-with open("README.rst", "r") as fh:
+with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
@@ -25,7 +25,7 @@ setup(
     keywords=["senaite", "lims", "plate"],
     author="YME ROCKS",
     author_email="lt@yme.rocks",
-    url="https://github.com/yme-rocks/senaite.multiwellplate.git",
+    url="https://github.com/senaite/senaite.multiwellplate.git",
     license="GPLv2",
     packages=find_packages("src", exclude=["ez_setup"]),
     package_dir={"": "src"},
@@ -33,8 +33,8 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        "senaite.lims>=2.6.0",
-        "senaite.core>=2.6.0",
+        "senaite.lims>=2.7.0",
+        "senaite.core>=2.7.0",
         "setuptools",
     ],
     extras_require={

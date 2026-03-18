@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2025 by it's authors.
+# Copyright 2026 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from plone.autoform import directives
@@ -24,13 +24,82 @@ from senaite.core.schema.fields import DataGridField
 from senaite.core.schema.fields import DataGridRow
 from senaite.core.z3cform.widgets.datagrid import DataGridWidgetFactory
 from senaite.core.z3cform.widgets.number import NumberWidget
-from senaite.multiwellplate import messageFactory as _
+from z3c.form import error
+from z3c.form import validator
+from zope import component
 from zope import schema
 from zope.interface import Interface
 
+from .hiddenfield import HiddenField
 from .ruleheaderfield import DEFAULT_RULE_HEADER
 from .ruleheaderfield import RuleHeaderField
-from senaite.multiwellplate.z3cform.widgets.ruleheader import RuleHeaderWidgetFactory
+from senaite.multiwellplate import messageFactory as _
+from senaite.multiwellplate.validators.mwp_config_fields import \
+    MWPConfigFieldsValidator
+from senaite.multiwellplate.validators.mwp_config_fields import \
+    MWPConfigFieldsValidationErrorView
+from senaite.multiwellplate.z3cform.widgets.ruleheader import \
+    RuleHeaderWidgetFactory
+
+
+def default_fields_value():
+    return [
+        {
+            "keyword": u"uid",
+            "title": u"UID",
+            "value": u"obj.UID()",
+            "filterable": False,
+            "sortable": False,
+            "groupable": False,
+            "display_mode": "none",
+        },
+        {
+            "keyword": u"keyword",
+            "title": u"Service Keyword",
+            "value": u"obj.Keyword",
+            "filterable": True,
+            "sortable": True,
+            "groupable": True,
+            "display_mode": "title",
+        },
+        {
+            "keyword": u"serviceTitle",
+            "title": u"Service Title",
+            "value": u"obj.getService().Title()",
+            "filterable": True,
+            "sortable": False,
+            "groupable": False,
+            "display_mode": "description",
+        },
+        {
+            "keyword": u"clientId",
+            "title": u"Client ID",
+            "value": u"obj.getRequest().getClient().getClientID()",
+            "filterable": True,
+            "sortable": True,
+            "groupable": True,
+            "display_mode": "title",
+
+        },
+        {
+            "keyword": u"clientName",
+            "title": u"Client Name",
+            "value": u"obj.getRequest().getClient().Title()",
+            "filterable": True,
+            "sortable": True,
+            "groupable": True,
+            "display_mode": "description",
+        },
+        {
+            "keyword": u"sampleId",
+            "title": u"Sample ID",
+            "value": u"obj.getRequest().getId()",
+            "filterable": True,
+            "sortable": True,
+            "groupable": True,
+            "display_mode": "title",
+        },
+    ]
 
 
 class IFieldRecordSchema(Interface):
@@ -147,6 +216,11 @@ class MultiWellPlateConfigSchema(model.Schema):
         default=False,
     )
 
+    form_adapter_name = HiddenField(
+        required=False,
+        default=u"edit_multiwellplate",
+    )
+
     directives.widget("cols_count", NumberWidget)
     cols_count = schema.Int(
         title=_(
@@ -180,63 +254,7 @@ class MultiWellPlateConfigSchema(model.Schema):
                       default=u"Fields includes to analyses objects"),
         value_type=DataGridRow(schema=IFieldRecordSchema),
         required=False,
-        default=[
-            {
-                "keyword": u"uid",
-                "title": u"UID",
-                "value": u"obj.UID()",
-                "filterable": False,
-                "sortable": False,
-                "groupable": False,
-                "display_mode": "none",
-            },
-            {
-                "keyword": u"keyword",
-                "title": u"Service Keyword",
-                "value": u"obj.Keyword",
-                "filterable": True,
-                "sortable": True,
-                "groupable": True,
-                "display_mode": "title",
-            },
-            {
-                "keyword": u"serviceTitle",
-                "title": u"Service Title",
-                "value": u"obj.getService().Title()",
-                "filterable": True,
-                "sortable": False,
-                "groupable": False,
-                "display_mode": "description",
-            },
-            {
-                "keyword": u"clientId",
-                "title": u"Client ID",
-                "value": u"obj.getRequest().getClient().getClientID()",
-                "filterable": True,
-                "sortable": True,
-                "groupable": True,
-                "display_mode": "title",
-
-            },
-            {
-                "keyword": u"clientName",
-                "title": u"Client Name",
-                "value": u"obj.getRequest().getClient().Title()",
-                "filterable": True,
-                "sortable": True,
-                "groupable": True,
-                "display_mode": "description",
-            },
-            {
-                "keyword": u"sampleId",
-                "title": u"Sample ID",
-                "value": u"obj.getRequest().getId()",
-                "filterable": True,
-                "sortable": True,
-                "groupable": True,
-                "display_mode": "title",
-            },
-        ],
+        default=default_fields_value(),
     )
 
     directives.widget(
@@ -254,3 +272,17 @@ class MultiWellPlateConfigSchema(model.Schema):
         required=False,
         default=[],
     )
+
+
+validator.WidgetValidatorDiscriminators(
+    MWPConfigFieldsValidator,
+    field=MultiWellPlateConfigSchema["fields"],
+)
+component.provideAdapter(MWPConfigFieldsValidator)
+
+error.ErrorViewDiscriminators(
+    MWPConfigFieldsValidationErrorView,
+    error=error.MultipleErrors,
+    field=MultiWellPlateConfigSchema["fields"],
+)
+component.provideAdapter(MWPConfigFieldsValidationErrorView)

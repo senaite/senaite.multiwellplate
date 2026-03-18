@@ -1,64 +1,14 @@
-import { useContext, useState, useSyncExternalStore } from 'react';
-import { useDraggable } from "@dnd-kit/react";
+import { useContext, useEffect, useImperativeHandle, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { AppContext } from './Layout.jsx';
 import { WorksheetPresenterContext } from '../App.jsx';
+import SideListDraggableItem from './SideListDraggableItem.jsx';
+import MultiSelectDropdown from './Controls/MultiSelectDropdown.jsx';
+import { pipe } from '../core/helpers/utilities.js';
 
 
-function SideListDraggableItem({ item, isSelected, isDragging, fieldConfig, presenter }) {
-    const { ref: setDraggableNodeRef, handleRef: setHandleNodeRef } = useDraggable({
-        id: item,
-        disabled: !isSelected,
-        data: { type: 'unassigned', uid: item },
-    });
+function SideList({ ref, handleSelection, handleDeselection }) {
 
-    const data = item.data;
-
-    const handleItemClick = () => {
-        if (isSelected) {
-            presenter.deselect(item.uid);
-        } else {
-            presenter.select(item.uid);
-        }
-    };
-
-    return (
-        <button
-            key={item}
-            onClick={() => handleItemClick(item)}
-            ref={node => { setDraggableNodeRef(node); setHandleNodeRef(node); }}
-            className={`item-card
-                        ${isSelected ? 'selected' : ''}
-                        ${isSelected && isDragging ? 'dragging' : ''}`}
-        >
-            <div className="item-content">
-                <div className="item-info">
-                    <div className="item-name">
-                        {Object.entries(data).map(([key, value]) => {
-                            if (!['both', 'title'].includes(fieldConfig[key]?.display_mode)) return null;
-                            return <span key={key} className={`name-${key}`}>{value}&nbsp;</span>
-                        })}
-                    </div>
-                    <div className="item-meta">
-                        {Object.entries(data).map(([key, value]) => {
-                            if (!['both', 'description'].includes(fieldConfig[key]?.display_mode)) return null;
-                            return <span key={key} className={`meta-${key}`}>{value}&nbsp;</span>
-                        })}
-                    </div>
-                </div>
-                {isSelected && (
-                    <div className="checkmark">
-                        <svg fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                            <path d="M5 13l4 4L19 7"></path>
-                        </svg>
-                    </div>
-                )}
-            </div>
-        </button>
-    );
-}
-
-function SideList({ ref, onFocus }) {
-
+    const domRef = useRef(null);
     const { isDragging } = useContext(AppContext);
 
     const presenter = useContext(WorksheetPresenterContext);
@@ -66,59 +16,120 @@ function SideList({ ref, onFocus }) {
     const [filters, setFilters] = useState({
         search: '',
         analyses: {
-            groupBy: '',
-            sortBy: '',
+            groupBy: [],   
+            sortBy: [],    
             sortOrder: 'asc'
         },
     });
 
-    const listUnassigned = useSyncExternalStore(presenter.subscribe, () => presenter.getUnassignedListSnapshot());
+    const analysesList = useSyncExternalStore(presenter.subscribeUnassigned, () => presenter.getUnassignedListSnapshot());
 
     const fieldConfig = presenter.getConfig().fields;
 
-    // Apply sorting to items
-    const getSortedItems = (items) => {
-        if (!filters.analyses.sortBy) return items;
+    // Apply multi-field sorting to items (fields are ordered by priority)
+    const sortItems = (items) => {
+        if (!filters.analyses.sortBy.length) return items;
 
         return [...items].sort((a, b) => {
-            const aValue = a.data[filters.analyses.sortBy] || '';
-            const bValue = b.data[filters.analyses.sortBy] || '';
-
-            const comparison = aValue.toString().localeCompare(bValue.toString(), undefined, { numeric: true });
-            return filters.analyses.sortOrder === 'asc' ? comparison : -comparison;
+            for (const field of filters.analyses.sortBy) {
+                const aVal = (a.data[field] ?? '').toString();
+                const bVal = (b.data[field] ?? '').toString();
+                const cmp = aVal.localeCompare(bVal, undefined, { numeric: true });
+                if (cmp !== 0) return filters.analyses.sortOrder === 'asc' ? cmp : -cmp;
+            }
+            return 0;
         });
     };
 
-    // Apply grouping to items
-    const getGroupedItems = (items) => {
-        if (!filters.analyses.groupBy) {
-            return { '': items };
+    // Apply multi-field grouping – group key is the combined values of all groupBy fields
+    const groupItems = (items) => {
+        const groups = new Map();
+
+        if (!filters.analyses.groupBy.length) {
+            return groups.set('[]', items);
         }
 
-        const groups = {};
         items.forEach(item => {
-            const groupValue = item.data[filters.analyses.groupBy] || 'Ungrouped';
-            if (!groups[groupValue]) {
-                groups[groupValue] = [];
-            }
-            groups[groupValue].push(item);
+            const key = filters.analyses.groupBy
+                .flatMap(field => item.data[field] ?? 'Ungrouped')
+            const keyStr = JSON.stringify(key);
+            if (!groups.has(keyStr)) groups.set(keyStr, []);
+            groups.get(keyStr).push(item);
         });
 
-        console.log('Grouped Items:', groups);
         return groups;
     };
 
-    // Process items: filter, sort, then group
-    const filteredItems = listUnassigned.filter(item =>
-        presenter.search(filters.search).includes(item.uid)
+    const sortGroups = (groupedItems) => {
+        if (!filters.analyses.groupBy.length) return groupedItems;
+
+        return new Map([...groupedItems.entries()].toSorted(([keyStrA], [keyStrB]) => {
+            const keyA = JSON.parse(keyStrA);
+            const keyB = JSON.parse(keyStrB);
+            return Array.from({ length: Math.max(keyA.length, keyB.length) }, (_, i) =>
+                (keyA[i] ?? '').localeCompare(keyB[i] ?? '')
+            ).find(cmp => cmp !== 0) ?? 0;
+        }));
+    }
+
+    const [debouncedSearch, setDebouncedSearch] = useState(filters.search);
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(filters.search), 300);
+        return () => clearTimeout(timer);
+    }, [filters.search]);
+
+    const searchResultSet = useMemo(
+        () => new Set(presenter.search(debouncedSearch)),
+        [debouncedSearch, analysesList]
     );
-    const sortedItems = getSortedItems(filteredItems);
-    const groupedItems = getGroupedItems(sortedItems);
+
+    const unassignedList = useMemo(
+        () => Object.entries(analysesList).map(([uid, item]) => ({ uid, ...item })),
+        [analysesList]
+    );
+
+    const filteredItems = useMemo(
+        () => unassignedList.filter(item => searchResultSet.has(item.uid)),
+        [unassignedList, searchResultSet]
+    );
+
+    const sortedAndGroupedItems = useMemo(
+        () => pipe(sortItems, groupItems, sortGroups)(filteredItems),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [filteredItems, filters.analyses.sortBy, filters.analyses.sortOrder, filters.analyses.groupBy]
+    );
+
+    const selectGroup = (group) => handleSelection(sortedAndGroupedItems.get(group).map(item => item.uid));
+    const deselectGroup = (group) => handleDeselection(sortedAndGroupedItems.get(group).map(item => item.uid));;
+
+    const handleItemClick = (item) => {
+        if (item.isSelected) {
+            handleDeselection(item.uid);
+        } else {
+            handleSelection(item.uid);
+        }
+    };
+
+    const handleGroupClick = (group) => {
+        const allSelected = sortedAndGroupedItems.get(group).every(item => item.isSelected);
+        if (allSelected) {
+            deselectGroup(group);
+        } else {
+            selectGroup(group);
+        }
+    };
+
+    useImperativeHandle(ref, () => ({
+        handleSelectAll: () => {
+            handleSelection(filteredItems.map(item => item.uid))
+        },
+        contains: (node) => domRef.current?.contains(node),
+    }), [filteredItems]);
 
     return (
-        <div className="side-list-wrapper" ref={ref} onFocus={onFocus}>
+        <div className="side-list-wrapper" ref={domRef} >
             <div className="sidelist-header">
-                <h3 className="sidelist-title">Analyses</h3>
+                <h3 className="sidelist-title">Unplated</h3>
             </div>
             <div className="search-section">
                 <div className="search-wrapper">
@@ -155,28 +166,26 @@ function SideList({ ref, onFocus }) {
                         <div className="filter-group">
                             <label className="filter-label">Sort By</label>
                             <div className="filter-row">
-                                <select
+                                <MultiSelectDropdown
+                                    options={Object.entries(fieldConfig)
+                                        .filter(([, cfg]) => cfg.sortable)
+                                        .map(([field, cfg]) => ({ value: field, label: cfg.title || field }))}
                                     value={filters.analyses.sortBy}
-                                    onChange={(e) => setFilters({
-                                        ...filters,
-                                        analyses: { ...filters.analyses, sortBy: e.target.value }
-                                    })}
-                                    className="filter-select"
-                                >
-                                    <option value="">None</option>
-                                    {Object.entries(fieldConfig).filter(([field, config]) => config.sortable).map(([field, config]) => (
-                                        <option key={field} value={field}>{config.title || field}</option>
-                                    ))}
-                                </select>
-                                {filters.analyses.sortBy && (
+                                    onChange={(newSortBy) => setFilters(prev => ({
+                                        ...prev,
+                                        analyses: { ...prev.analyses, sortBy: newSortBy }
+                                    }))}
+                                    placeholder="None"
+                                />
+                                {filters.analyses.sortBy.length > 0 && (
                                     <button
-                                        onClick={() => setFilters({
-                                            ...filters,
+                                        onClick={() => setFilters(prev => ({
+                                            ...prev,
                                             analyses: {
-                                                ...filters.analyses,
-                                                sortOrder: filters.analyses.sortOrder === 'asc' ? 'desc' : 'asc'
+                                                ...prev.analyses,
+                                                sortOrder: prev.analyses.sortOrder === 'asc' ? 'desc' : 'asc'
                                             }
-                                        })}
+                                        }))}
                                         className="sort-order-toggle"
                                         aria-label="Toggle sort order"
                                     >
@@ -193,19 +202,17 @@ function SideList({ ref, onFocus }) {
                         </div>
                         <div className="filter-group">
                             <label className="filter-label">Group By</label>
-                            <select
+                            <MultiSelectDropdown
+                                options={Object.entries(fieldConfig)
+                                    .filter(([, cfg]) => cfg.groupable)
+                                    .map(([field, cfg]) => ({ value: field, label: cfg.title || field }))}
                                 value={filters.analyses.groupBy}
-                                onChange={(e) => setFilters({
-                                    ...filters,
-                                    analyses: { ...filters.analyses, groupBy: e.target.value }
-                                })}
-                                className="filter-select"
-                            >
-                                <option value="">None</option>
-                                {Object.entries(fieldConfig).filter(([field, config]) => config.groupable).map(([field, config]) => (
-                                    <option key={field} value={field}>{config.title || field}</option>
-                                ))}
-                            </select>
+                                onChange={(newGroupBy) => setFilters(prev => ({
+                                    ...prev,
+                                    analyses: { ...prev.analyses, groupBy: newGroupBy }
+                                }))}
+                                placeholder="None"
+                            />
                         </div>
                     </div>
                 )}
@@ -214,26 +221,29 @@ function SideList({ ref, onFocus }) {
                 <div className="items-count">
                     {filteredItems.length} found
                 </div>
-                {Object.entries(groupedItems).map(([groupName, items]) => (
-                    <div key={groupName} className="group-section">
-                        {groupName && (
-                            <div className="group-header">
-                                <div className="group-title">{groupName}</div>
-                                <div className="group-count">{items.length}</div>
-                            </div>
-                        )}
-                        {items.map(item => (
-                            <SideListDraggableItem
-                                key={item.uid}
-                                item={item}
-                                isSelected={item.isSelected}
-                                isDragging={isDragging.current}
-                                fieldConfig={fieldConfig}
-                                presenter={presenter}
-                            />
-                        ))}
-                    </div>
-                ))}
+                {[...sortedAndGroupedItems].map(([keyStr, items]) => {
+                    const groups = JSON.parse(keyStr);
+                    return (
+                        <div key={keyStr} className="group-section">
+                            {groups.length > 0 && (
+                                <div className="group-header" onClick={() => handleGroupClick(keyStr)}>
+                                    <div className="group-title">{groups.join(' › ')}</div>
+                                    <div className="group-count">{items.length}</div>
+                                </div>
+                            )}
+                            {items.map(item => (
+                                <SideListDraggableItem
+                                    key={item.uid}
+                                    item={item}
+                                    isDragging={isDragging.current}
+                                    fieldConfig={fieldConfig}
+                                    presenter={presenter}
+                                    handleItemClick={handleItemClick}
+                                />
+                            ))}
+                        </div>
+                    );
+                })}
 
             </div>
         </div>

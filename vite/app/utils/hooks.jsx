@@ -78,6 +78,31 @@ export const useShiftState = (handleShift) => {
 }
 
 
+export const useCtrlState = (handleCtrl) => {
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            if (event.key === 'Control' || event.key === 'Meta') {
+                handleCtrl(true);
+            }
+        };
+
+        const handleKeyUp = (event) => {
+            if (event.key === 'Control' || event.key === 'Meta') {
+                handleCtrl(false);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+        };
+    }, [handleCtrl]);
+}
+
+
 export const useEscape = (onEscape) => {
     useEffect(() => {
         const handleEscape = (event) => {

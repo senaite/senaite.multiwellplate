@@ -69,53 +69,108 @@
         }
 
       },
-      rules: {
-        "test_rule": {
+      rules: [
+        {
           "color": "#f0a0d0",
-          "body": {
-            conditions: {
-              all: [
-                {
-                  name: 'rule-applicapable-area-condition',
-                  fact: 'nextIdx',
-                  operator: 'in',
-                  value: {
-                    fact: 'all-ids',
-                  }
-                },
-                {
-                  any: [
-                    {
-                      name: 'empty-well-condition',
-                      fact: 'nextIdx',
-                      operator: 'in',
-                      value: {
-                        fact: 'empty-ids',
-                      }
-                    },
-                    {
-                      name: 'same-sampleid-only-condition',
-                      fact: 'well-data',
-                      params: {
-                        fieldName: 'sampleId'
-                      },
-                      operator: 'everyFact:equal',
-                      value: {
-                        fact: 'uid-data',
-                        path: '$.sampleId',
-                      }
-                    }
-                  ]
+          conditions: {
+            all: [
+              {
+                name: 'rule-applicapable-area-condition',
+                type: 'precondition',
+                fact: 'nextIdx',
+                operator: 'in',
+                value: {
+                  fact: 'all-ids',
                 }
-              ]
-            },
-            name: 'test-rule',
-            event: { type: 'well-empty' }
+              },
+              {
+                any: [
+                  {
+                    name: 'empty-well-condition',
+                    type: 'body',
+                    fact: 'nextIdx',
+                    operator: 'in',
+                    value: {
+                      fact: 'empty-ids',
+                    }
+                  },
+                  {
+                    name: 'same-sampleid-only-condition',
+                    type: 'body',
+                    fact: 'well-data',
+                    params: {
+                      fieldName: 'sampleId'
+                    },
+                    operator: 'everyFact:equal',
+                    value: {
+                      fact: 'uid-data',
+                      path: '$.sampleId',
+                    }
+                  }
+                ]
+              }
+            ]
           },
+          name: 'test-rule',
+          event: { type: 'test-rule' },
           "description": "test",
           "title": "main"
+        },        
+        {
+          "description": "",
+          "color": "",
+          name: 'rule-w-failed-condition',
+          event: { type: 'rule-w-failed-condition' },
+          conditions: {
+            all: [
+              {
+                name: 'rule-applicapable-area-precondition',
+                type: 'precondition',
+                fact: 'nextIdx',
+                operator: 'in',
+                value: {
+                  fact: 'all-ids',
+                }
+              },
+              {
+                // failed condition
+              },
+            ]
+          }
         }
-      },
+        ,
+        // {
+        //   "description": "",
+        //   "color": "",
+        //   name: 'second-rule',
+        //   event: { type: 'second-rule' },
+        //   conditions: {
+        //     all: [
+        //       {
+        //         name: 'rule-applicapable-area-precondition',
+        //         type: 'precondition',
+        //         fact: 'nextIdx',
+        //         operator: 'in',
+        //         value: [1]
+        //         // value: {
+        //         //   fact: 'all-ids',
+        //         // }
+        //       },
+        //       {
+        //         name: 'rule-applicapable-area-precondition',
+        //         type: 'body',
+        //         fact: 'nextIdx',
+        //         operator: 'in',
+        //         value: [85]
+        //         // value: {
+        //         //   fact: 'all-ids',
+        //         // }
+        //       },
+        //     ]
+        //   }
+        // }
+
+      ],
       analyses: {
         'uid-1': { wellIdx: 1, data: { keyword: 'kwrd-1', title: 'Lab Test 1', sampleType: 'epithelium', sampleId: 'S-001', clientId: 'AAA', clientName: 'Coca-Cola' } },
         'uid-2': { wellIdx: 48, data: { keyword: 'kwrd-1', title: 'Lab Test 1', sampleType: 'blood', sampleId: 'S-010', clientId: 'BBB', clientName: 'Apple' } },
@@ -150,7 +205,7 @@
         'uid-31': { data: { keyword: 'kwrd-5', title: 'Lab Test 5', sampleType: 'blood', sampleId: 'S-505', clientId: 'HHH', clientName: 'TOYOTA' } },
         'uid-32': { data: { keyword: 'kwrd-7', title: 'Lab Test 7', sampleType: 'blood', sampleId: 'S-505', clientId: 'HHH', clientName: 'TOYOTA' } },
         'uid-33': { data: { keyword: 'kwrd-8', title: 'Lab Test 8', sampleType: 'blood', sampleId: 'S-510', clientId: 'HHH', clientName: 'TOYOTA' } },
-        'uid-34': { data: { keyword: 'kwrd-8', title: 'Lab Test 8', sampleType: 'blood', sampleId: 'S-510', clientId: 'HHH', clientName: 'TOYOTA' } },
+        'uid-34': { data: { keyword: 'kwrd-9', title: 'Lab Test 9', sampleType: 'blood', sampleId: 'S-510', clientId: 'HHH', clientName: 'TOYOTA' } },
         'uid-35': { data: { keyword: 'kwrd-5', title: 'Lab Test 5', sampleType: 'epithelium', sampleId: 'S-001', clientId: 'AAA', clientName: 'Coca-Cola' } },
         'uid-36': { data: { keyword: 'kwrd-6', title: 'Lab Test 6', sampleType: 'epithelium', sampleId: 'S-001', clientId: 'AAA', clientName: 'Coca-Cola' } },
         'uid-37': { data: { keyword: 'kwrd-7', title: 'Lab Test 7', sampleType: 'epithelium', sampleId: 'S-001', clientId: 'AAA', clientName: 'Coca-Cola' } },
@@ -178,7 +233,7 @@
   <div><img width=20% src="/plate_icon.svg" /></div>
   <div>Click on the buttons below to emit anchor item click events:</div>
   <div style="display: flex; gap: 10px;flex-direction: column;">
-    <button class="an-item"  uid="uid-1" style="anchor-name: --uid-1" onclick="emit_plate_event(event)">
+    <button class="an-item" uid="uid-1" style="anchor-name: --uid-1" onclick="emit_plate_event(event)">
       <span id="uid-1"></span><img width="20px" src="/micropipette_w_drop.svg" />
     </button>
     <button class="an-item" uid="uid-2" style="anchor-name: --uid-2" onclick="emit_plate_event(event)">

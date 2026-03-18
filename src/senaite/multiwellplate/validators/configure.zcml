@@ -1,0 +1,9 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    i18n_domain="senaite.multiwellplate">
+
+  <adapter
+      name="mwp_config_fields_validator"
+      factory=".mwp_config_fields.MWPConfigFieldsValidator" />
+
+</configure>

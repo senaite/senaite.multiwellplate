@@ -4,11 +4,13 @@ import { WorksheetPresenterContext } from '../../App';
 
 function ExternalLabels() {
     const presenter = useContext(WorksheetPresenterContext);
-    const listAssigned = useSyncExternalStore(presenter.subscribe, () => presenter.getAssignedListSnaphot());
-    listAssigned.forEach(({uid, wellIdx}) => {
-        const el = document.getElementById(uid);
-        if (el) el.innerHTML = wellIdx || '&nbsp;';
-    })
+    const analysesList = useSyncExternalStore(presenter.subscribe, () => presenter.getAnalysesListSnapshot());
+
+    Object.entries(analysesList).map(([uid, item]) => ({ uid, ...item })).forEach((item) => {
+        const el = document.getElementById(item.uid);
+        if (el) el.innerHTML = item?.wellIdx !== null ? item.wellIdx : '&nbsp;';
+    });
+
     return null;
 }
 

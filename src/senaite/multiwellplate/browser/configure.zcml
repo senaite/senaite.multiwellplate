@@ -4,6 +4,7 @@
         xmlns:plone="http://namespaces.plone.org/plone"
         i18n_domain="senaite.multiwellplate">
 
+    <include package=".form"/>
     <include package=".viewlets" />
 
     <browser:page

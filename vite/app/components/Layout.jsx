@@ -42,7 +42,7 @@ function Layout({ startMode }) {
     }
 
     useAnchorClick(onAnchorClick);
-    useClickOutsideRef(containerRef, !isContainered(mode) ? onClose : () => {} );
+    useClickOutsideRef(containerRef, !isContainered(mode) ? onClose : () => { });
     useEscape(onEscape);
 
     const { rowsCount, colsCount } = presenter.model;
@@ -62,15 +62,15 @@ function Layout({ startMode }) {
                 <div className={layoutClass} style={layoutStyle} ref={containerRef}>
                     <div className={mainClass}>
                         {!isContainered(mode) &&
-                            <AppControls onClose={onClose} toggleAppMode={toggleAppMode} mode={mode} />
+                            <AppControls title={presenter.getWorksheetId()} onClose={onClose} toggleAppMode={toggleAppMode} mode={mode} />
                         }
                         <div className='workspace'>
 
                             {isWidget(mode) ?
                                 <>
-                                <div className="plate-container widget">
-                                    <WellsBlock rowsCount={rowsCount} colsCount={colsCount} />
-                                </div>
+                                    <div className="plate-container widget">
+                                        <WellsBlock rowsCount={rowsCount} colsCount={colsCount} />
+                                    </div>
                                 </>
                                 : <Workspace rowsCount={rowsCount} colsCount={colsCount} />}
                         </div>

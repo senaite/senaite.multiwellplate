@@ -15,12 +15,19 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2025 by it's authors.
+# Copyright 2026 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from z3c.form.interfaces import IWidget
 
 
+class IHiddenWidget(IWidget):
+    """HiddenField view widget
+    """
+    pass
+
+
 class IRuleHeaderWidget(IWidget):
     """RuleHeader view widget
     """
+    pass

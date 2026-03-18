@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright 2025 by it's authors.
+# Copyright 2026 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
 from senaite.core.registry import get_registry_record
@@ -63,8 +63,6 @@ def post_install(portal_setup):
     context = portal_setup._getImportContext(PROFILE_ID)  # noqa
     portal = context.getSite()  # noqa
 
-    add_well_column_view_analysis()
-
     logger.info("{} install handler [DONE]".format(PRODUCT_NAME.upper()))
 
 
@@ -80,32 +78,4 @@ def post_uninstall(portal_setup):
     context = portal_setup._getImportContext(profile_id)
     portal = context.getSite()  # noqa
 
-    remove_well_column_view_analysis()
-
     logger.info("{} uninstall handler [DONE]".format(PRODUCT_NAME.upper()))
-
-
-def add_well_column_view_analysis():
-    """Insert column 'Well' after 'Pos' column for worksheet view
-    """
-    name = "worksheetview_analysis_columns_order"
-    columns_order = get_registry_record(name, default=[]) or []
-    new_order = []
-    inserted = False
-    for c in columns_order:
-        new_order.append(c)
-        if c == "Pos":
-            new_order.append("Well")
-            inserted = True
-    if not inserted:
-        new_order.append("Well")
-    set_registry_record(name, new_order)
-
-
-def remove_well_column_view_analysis():
-    """Remove column 'Well' for worksheet view
-    """
-    name = "worksheetview_analysis_columns_order"
-    columns_order = get_registry_record(name, default=[]) or []
-    columns_order = list(filter(lambda c: c != "Well", columns_order))
-    set_registry_record(name, columns_order)

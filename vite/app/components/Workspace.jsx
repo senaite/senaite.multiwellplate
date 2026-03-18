@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { use, useContext, useEffect, useRef, useState } from "react";
 import { DragDropProvider, DragOverlay } from '@dnd-kit/react';
 import { SnapCenterToCursor } from "../utils/snapcentermodifier.js";
 import { PointerSensor, PointerActivationConstraints } from '@dnd-kit/dom';
@@ -12,16 +12,53 @@ import SideDrawer from "./SideDrawer.jsx";
 import { useClickOutside, useDeleteAndBackspace, useSelectAllShortcut, useShiftState } from '../utils/hooks.jsx';
 
 
+function DragSelectionZone({ presenter, selectableItems, shiftKeyRef }) {
+    const [shiftKeyState, setShiftKeyState] = useState(false);
+    const [, setSelectionBox] = useState({});
+
+    useShiftState((val) => {
+        setShiftKeyState(val);
+        shiftKeyRef.current = val;
+    });
+
+    const { DragSelection } = useSelectionContainer({
+        selectionProps: {
+            style: {
+                border: '1px solid #4C85D8',
+                background: 'rgba(155, 193, 239, 0.4)',
+                opacity: 0.5,
+                zIndex: 500,
+            },
+        },
+        isEnabled: shiftKeyState,
+        eventsElement: document.getElementById('elements-container'),
+        onSelectionChange: (box) => {
+            setSelectionBox({ ...box });
+            selectableItems.current.forEach((item, index) => {
+                if (boxesIntersect(box, item)) {
+                    presenter.selectWell(index + 1);
+                }
+            });
+        },
+        onSelectionStart: () => {
+            presenter.setSelectedAnalyses([]);
+        },
+    });
+
+    return <DragSelection />;
+}
+
+
 function Workspace({ rowsCount, colsCount }) {
     const presenter = useContext(WorksheetPresenterContext);
     const { isDragging } = useContext(AppContext);
     const plateToolsRef = useRef(null);
     const platePanelRef = useRef(null);
     const sideListPanelRef = useRef(null);
+    const sideDrawerPanelRef = useRef(null);
     const activePanel = useRef('list');
-    const [, setSelectionBox] = useState({});
     const selectableItems = useRef([]);
-    const [shiftKeyState, setShiftKeyState] = useState(false);
+    const shiftKeyRef = useRef(false);
 
     const sensors = [
         PointerSensor.configure({
@@ -32,7 +69,7 @@ function Workspace({ rowsCount, colsCount }) {
     ];
 
     const onBeforeDragStart = (event, manager) => {
-        if (shiftKeyState) {
+        if (shiftKeyRef.current) {
             event.preventDefault();
         }
     }
@@ -47,17 +84,25 @@ function Workspace({ rowsCount, colsCount }) {
     };
 
     const onDragOver = (event, manager) => {
+
         if (!event.operation.target) {
             presenter.setCurrentPreposition({});
             return;
         };
         const mode = event.operation.source.data.type !== 'well' ? presenter.getPrepositionMode() : 'shift';
-        presenter.getPrepositionedAnalyses({
-            targetPos: event.operation.target.id,
-            initialPos: event.operation.source.data.idx,
-            uidList: presenter.getNextAssignments(),
-            prepositionMode: mode,
-        }).then((prepositioned) => presenter.setCurrentPreposition(prepositioned));
+
+        async function doEval() {
+            return presenter.getPrepositionedAnalyses({
+                targetPos: event.operation.target.id,
+                initialPos: event.operation.source.data.idx,
+                uidList: presenter.getNextAssignments(),
+                prepositionMode: mode,
+            });
+        };
+
+        doEval().then((prepositioned) => {
+            presenter.setCurrentPreposition(prepositioned);
+        });
     };
 
     const onDragEnd = (event, manager) => {
@@ -73,22 +118,24 @@ function Workspace({ rowsCount, colsCount }) {
     useClickOutside((event) => {
         if (plateToolsRef.current && plateToolsRef.current.contains(event.target)) return;
         if ((activePanel.current === 'plate' && !platePanelRef.current.contains(event.target)) ||
-            (activePanel.current === 'list' && !sideListPanelRef.current.contains(event.target)))
+            (activePanel.current === 'list' && !sideListPanelRef.current.contains(event.target)) ||
+            (activePanel.current === 'drawer' && !sideDrawerPanelRef.current.contains(event.target)))
             presenter.setSelectedAnalyses([]);
     });
 
     useSelectAllShortcut(() => {
-        if (activePanel.current === "plate") {
-            presenter.selectAllNonEmptyWells();
+        if (activePanel.current === "list") {
+            sideListPanelRef.current.handleSelectAll();
             return;
-        } else {
-            presenter.selectAllUnassignedAnalyses();
         }
+        if (activePanel.current === "drawer") {
+            sideDrawerPanelRef.current.handleSelectAll();
+            return;
+        }
+        presenter.selectMany(presenter.getAssignedAnalysesUids());
     })
 
-    useDeleteAndBackspace(() => (activePanel.current === "plate") && presenter.unassignSelected());
-
-    useShiftState(setShiftKeyState);
+    useDeleteAndBackspace(() => (activePanel.current === "plate" || activePanel.current === "drawer") && presenter.unassignSelected());
 
     useEffect(() => {
         if (platePanelRef?.current) {
@@ -102,32 +149,8 @@ function Workspace({ rowsCount, colsCount }) {
         }
     }, []);
 
-    const { DragSelection } = useSelectionContainer(
-        {
-            selectionProps: {
-                style: {
-                    border: '1px solid #4C85D8',
-                    background: 'rgba(155, 193, 239, 0.4)',
-                    opacity: 0.5,
-                    zIndex: 500,
-                },
-            },
-            isEnabled: shiftKeyState,
-            eventsElement: document.getElementById('elements-container'),
-            onSelectionChange: (box) => {
-                setSelectionBox({ ...box });
-                selectableItems.current.forEach((item, index) => {
-                    if (boxesIntersect(box, item)) {
-                        presenter.selectWell(index + 1)
-                    }
-                });
-            },
-            onSelectionStart: () => {
-                presenter.setSelectedAnalyses([]);
-            },
-
-        }
-    );
+    const handleSelection = (uids) => presenter.selectMany(Array.isArray(uids) ? uids : [uids]);
+    const handleDeselection = (uids) => presenter.deselectMany(Array.isArray(uids) ? uids : [uids]);
 
     return (
         <DragDropProvider
@@ -138,20 +161,28 @@ function Workspace({ rowsCount, colsCount }) {
             onDragOver={onDragOver}
             onDragEnd={onDragEnd}
         >
-            <div className="workspace-sidelist">
-                <SideList ref={sideListPanelRef} onFocus={() => activePanel.current = 'list'} />
+            <div className="workspace-sidelist" onFocus={() => activePanel.current = 'list'} tabIndex={0}>
+                <SideList
+                    ref={sideListPanelRef}
+                    handleSelection={handleSelection}
+                    handleDeselection={handleDeselection}
+                />
             </div>
-            <div className="workspace-plate">
+            <div className="workspace-plate" onFocus={() => activePanel.current = 'plate'} tabIndex={0}>
                 <PlateTools ref={plateToolsRef} />
-                <div className="plate-container-wrapper" onFocus={() => activePanel.current = 'plate'} tabIndex={0}>
-                    <DragSelection />
+                <div className="plate-container-wrapper">
+                    <DragSelectionZone presenter={presenter} selectableItems={selectableItems} shiftKeyRef={shiftKeyRef} />
                     <div id="elements-container" className="plate-container" ref={platePanelRef} >
                         <WellsBlock rowsCount={rowsCount} colsCount={colsCount} />
                     </div>
                 </div>
             </div>
-            <div className="workspace-sidedrawer">
-                <SideDrawer />
+            <div className="workspace-sidedrawer" onFocus={() => activePanel.current = 'drawer'} tabIndex={0}>
+                <SideDrawer
+                    ref={sideDrawerPanelRef}
+                    handleSelection={handleSelection}
+                    handleDeselection={handleDeselection}
+                />
             </div>
             <DragOverlay className="drag-overlay-pointer" />
         </DragDropProvider >

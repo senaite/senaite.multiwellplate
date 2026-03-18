@@ -1,6 +1,6 @@
 import { isOpen, isWidget } from '../utils/helpers';
 
-function AppControls({ onClose, toggleAppMode, mode }) {
+function AppControls({ title, onClose, toggleAppMode, mode }) {
     const isWidgetMode = isWidget(mode);
     const isAppMode = isOpen(mode) && !isWidget(mode);
 
@@ -35,7 +35,7 @@ function AppControls({ onClose, toggleAppMode, mode }) {
             </div>
 
             <div className="plate-title">
-                <h2>Multiwell Plate</h2>
+                <h2>{ title }</h2>
             </div>
 
             <div className="app-controls-right">

@@ -18,6 +18,8 @@
 # Copyright 2026 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
+import json
+
 from plone.autoform import directives
 from plone.supermodel import model
 from senaite.core.schema.fields import DataGridField
@@ -99,6 +101,30 @@ def default_fields_value():
             "groupable": True,
             "display_mode": "title",
         },
+    ]
+
+
+def default_rules_value():
+    default_rule_body = {
+        "name": "empty-well-condition",
+        "type": "body",
+        "fact": "nextIdx",
+        "operator": "in",
+        "value": {
+            "fact": "empty-ids"
+        }
+    }
+    return [
+        {
+            "rule_header": {
+                "id": u"rule-1",
+                "title": u"Empty-well-rule",
+                "description": u"Empty well only",
+                "color": u"",
+                "applies_to": u"1-96",
+            },
+            "rule_body": json.dumps(default_rule_body),
+        }
     ]
 
 
@@ -270,7 +296,7 @@ class MultiWellPlateConfigSchema(model.Schema):
                       default=u"Fields includes to analyses objects"),
         value_type=DataGridRow(schema=IRuleRecordSchema),
         required=False,
-        default=[],
+        default=default_rules_value(),
     )
 
 

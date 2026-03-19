@@ -172,7 +172,7 @@ class WorksheetPresenter {
     const snapshot = Object.fromEntries(
       Object.entries(this.getAnalyses()).map(([uid, a]) => {
         const isSelected = this.selectedAnalyses.has(uid);
-        if (prevSnapshot[uid]?.isSelected !== isSelected) changed = true;
+        if (prevSnapshot[uid]?.isSelected !== isSelected || prevSnapshot[uid]?.wellIdx !== a.wellIdx) changed = true;
         return [uid, { ...a, isSelected }];
       })
     );

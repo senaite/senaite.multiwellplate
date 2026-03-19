@@ -105,7 +105,7 @@ To assign analyses to the plate, select the desired items from the Unplated List
 
 <div align="center">
   <a href="">
-    <img src="static/multiwell_fullscreen.png" alt="Plate fulscreen mode" />
+    <img src="static/multiwell_plate_fullscreen.png" alt="Plate fulscreen mode" />
   </a>
 </div>
 

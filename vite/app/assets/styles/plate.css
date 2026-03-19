@@ -19,6 +19,7 @@
   font-weight: bold;
   background-color: transparent;
   align-content: center;
+  user-select: none;
 }
 
 .well {
@@ -293,17 +294,6 @@
   /* animation: dragItemPulse 1.5s ease-in-out infinite; */
 }
 
-@keyframes dragItemPulse {
-
-  0%,
-  100% {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.1), 0 0 0 0 rgba(53, 122, 189, 0.4);
-  }
-
-  50% {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.1), 0 0 0 8px rgba(53, 122, 189, 0.1);
-  }
-}
 
 .drag-overlay-item .item-content {
   display: flex;

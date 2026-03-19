@@ -1,5 +1,5 @@
 
-<script tal:attributes="src string:${view/site_url}/++plone++senaite.multiwellplate.static/bundles/senaite.app.6DI3gNa-.js"></script>
+<script tal:attributes="src string:${view/site_url}/++plone++senaite.multiwellplate.static/bundles/senaite.app.oxkcvoWh.js"></script>
 
 
-<link href="#" rel="stylesheet" tal:attributes="href string:${view/site_url}/++plone++senaite.multiwellplate.static/bundles/senaite.app.g2-Luu5O.css" />
+<link href="#" rel="stylesheet" tal:attributes="href string:${view/site_url}/++plone++senaite.multiwellplate.static/bundles/senaite.app.qTCs2O7w.css" />

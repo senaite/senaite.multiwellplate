@@ -333,6 +333,52 @@ class WorksheetPresenter {
     this.updateAnalysesList();
   }
 
+  selectColumn(col) {
+    const colWells = Array.from({ length: this.model.rowsCount }, (_, i) => i * this.model.colsCount + col).filter(wellIdx => this.model.getWellIdsWithAnalyses().includes(wellIdx));
+    const uidsToSelect = Object.entries(this.model.analyses)
+      .filter(([, analysis]) => colWells.includes(analysis.wellIdx))
+      .map(([uid]) => uid);
+    this.selectMany(uidsToSelect);
+  }
+
+  deselectColumn(col) {
+    const colWells = Array.from({ length: this.model.rowsCount }, (_, i) => i * this.model.colsCount + col).filter(wellIdx => this.model.getWellIdsWithAnalyses().includes(wellIdx));
+    const uidsToDeselect = Object.entries(this.model.analyses)
+      .filter(([, analysis]) => colWells.includes(analysis.wellIdx))
+      .map(([uid]) => uid);
+    this.deselectMany(uidsToDeselect);
+  }
+
+  selectRow(row) {
+    const rowWells = Array.from({ length: this.model.colsCount }, (_, i) => (row - 1) * this.model.colsCount + i + 1).filter(wellIdx => this.model.getWellIdsWithAnalyses().includes(wellIdx));
+    const uidsToSelect = Object.entries(this.model.analyses)
+      .filter(([, analysis]) => rowWells.includes(analysis.wellIdx))
+      .map(([uid]) => uid);
+    this.selectMany(uidsToSelect);
+  }
+
+  deselectRow(row) {
+    const rowWells = Array.from({ length: this.model.colsCount }, (_, i) => (row - 1) * this.model.colsCount + i + 1).filter(wellIdx => this.model.getWellIdsWithAnalyses().includes(wellIdx));
+    const uidsToDeselect = Object.entries(this.model.analyses)
+      .filter(([, analysis]) => rowWells.includes(analysis.wellIdx))
+      .map(([uid]) => uid);
+    this.deselectMany(uidsToDeselect);
+  }
+
+  getUidsByColumn(col) {
+    const colWells = Array.from({ length: this.model.rowsCount }, (_, i) => i * this.model.colsCount + col).filter(wellIdx => this.model.getWellIdsWithAnalyses().includes(wellIdx));
+    return Object.entries(this.model.analyses)
+      .filter(([, analysis]) => colWells.includes(analysis.wellIdx))
+      .map(([uid]) => uid);
+  }
+
+  getUidsByRow(row) {
+    const rowWells = Array.from({ length: this.model.colsCount }, (_, i) => (row - 1) * this.model.colsCount + i + 1).filter(wellIdx => this.model.getWellIdsWithAnalyses().includes(wellIdx));
+    return Object.entries(this.model.analyses)
+      .filter(([, analysis]) => rowWells.includes(analysis.wellIdx))
+      .map(([uid]) => uid);
+  }
+
   selectMany(uids) {
     const affectedWells = new Set(uids.map(uid => this.model.analyses[uid]?.wellIdx).filter(Boolean));
     uids.forEach(uid => this.selectedAnalyses.add(uid));
@@ -465,6 +511,12 @@ class WorksheetPresenter {
   }
 
 
+  unassignMany(uids) {
+    const assignments = uids.map(uid => ({ uid: uid, wellIdx: null }));
+    this.assignAnalyses(assignments);
+    this.deselectMany(uids);
+  }
+  
   unassignSelected() {
     const assignments = this.getSelectedAnalyses().map(uid => ({ uid: uid, wellIdx: null }))
     this.assignAnalyses(assignments);

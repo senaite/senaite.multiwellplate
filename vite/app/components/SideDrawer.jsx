@@ -1,6 +1,6 @@
 import { useContext, useEffect, useImperativeHandle, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { WorksheetPresenterContext } from '../App.jsx';
-import SideDrawerDraggableItem from './SideDrawerDraggableItem.jsx';
+import ListDraggableItem from './ListDraggableItem';
 import MultiSelectDropdown from './Controls/MultiSelectDropdown.jsx';
 import { pipe } from '../core/helpers/utilities.js';
 
@@ -51,6 +51,11 @@ function SideDrawer({ ref, handleSelection, handleDeselection }) {
     const filteredItems = useMemo(
         () => assignedList.filter(item => searchResultSet.has(item.uid)),
         [assignedList, searchResultSet]
+    );
+
+    const selectedCount = useMemo(
+        () => assignedList.filter(item => item.isSelected).length,
+        [assignedList]
     );
 
     const sortItems = (items) => {
@@ -115,10 +120,20 @@ function SideDrawer({ ref, handleSelection, handleDeselection }) {
         allSelected ? handleDeselection(wellItems.map(item => item.uid)) : handleSelection(wellItems.map(item => item.uid));
     };
 
+    const handleSelectAll = () => {
+        const allSelected = filteredItems.every(item => item.isSelected);
+        const uids = filteredItems.map(item => item.uid);
+        allSelected ? handleDeselection(uids) : handleSelection(uids);
+    };
+
+    const handleRemoveSelected = () => {
+        const assignedUids = new Set(assignedList.map(item => item.uid));
+        const selectedUids = presenter.getSelectedAnalyses().filter(uid => assignedUids.has(uid));
+        presenter.unassignMany(selectedUids);
+    }
+
     useImperativeHandle(ref, () => ({
-        handleSelectAll: () => {
-            handleSelection(filteredItems.map(item => item.uid))
-        },
+        handleSelectAll: () => handleSelectAll(),
         contains: (node) => domRef.current?.contains(node),
     }), [filteredItems]);
 
@@ -215,9 +230,16 @@ function SideDrawer({ ref, handleSelection, handleDeselection }) {
                 )}
             </div>
             <div className="side-drawer__list">
-                <div className="items-count">
-                    {filteredItems.length} found
+
+                <div className="sidelist-header">
+                    <div className="items-count">
+                        {filteredItems.length} found
+                    </div>
+                    <div onClick={() => handleSelectAll()} className="side_list__select-all-link-btn">
+                        Select All
+                    </div>
                 </div>
+
                 {groupedItems.size === 0 ? (
                     <div className="side-drawer__empty">No analyses assigned</div>
                 ) : (
@@ -252,7 +274,7 @@ function SideDrawer({ ref, handleSelection, handleDeselection }) {
                                         </div>
 
                                         {wellItems.map((item) => (
-                                            <SideDrawerDraggableItem
+                                            <ListDraggableItem
                                                 key={item.uid}
                                                 item={item}
                                                 isSelected={item.isSelected}
@@ -267,6 +289,15 @@ function SideDrawer({ ref, handleSelection, handleDeselection }) {
                         );
                     })
                 )}
+            </div>
+            <div className={`list-selection-toolbar${selectedCount > 0 ? ' list-selection-toolbar--visible' : ''}`}>
+                <span className="list-selection-toolbar__count">{selectedCount} selected</span>
+                <button className="list-selection-toolbar__btn list-selection-toolbar__btn--warning" onMouseDown={(e) => e.stopPropagation()} onClick={() => handleRemoveSelected()}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Remove
+                </button>
             </div>
         </div>
     );

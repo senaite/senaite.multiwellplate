@@ -63,11 +63,57 @@ Each field can be configured as follows:
 
 Here you can define the rules that determine whether analyses can be assigned to a particular well, whether multiple analyses can be assigned to the same well, or whether each analysis must be placed in the next available well.
 
-These rules are evaluated each time you attempt to assign analyses to a well.
+These rules are evaluated each time you attempt to assign analyses to a well. 
 
-## Assign to wells
+By default, a rule is defined that allows analyses to be assigned only to empty wells. You can modify this rule or add your own.
+
+**NOTE**: the app uses [JSON-rules](https://github.com/CacheControl/json-rules-engine/tree/master) engine for rules evaluation
+
+## Analyst workflow
 
 How it works for analyst
+
+### Create worksheets with Plateble templates
+
+After installing the add-on and configuring the template, laboratory staff can create worksheets using the new “Platable” templates. Simply follow the standard procedure for creating worksheets.
+
+### UI Overview
+
+After a worksheet is created, you are redirected to your selected worksheet layout. This add-on provides a modified Classic layout as well as a new Multiwell Plate layout.
+
+The new layout will appear in the layout selection list. When using the Classic layout, a new pipette control is available, which opens the application view.
+
+<div align="center">
+  <a href="">
+    <img src="static/manage_analyses_screen_new_features.png" alt="Manage aalyses view w/ plating controls" />
+  </a>
+</div>
+
+When you click pipette control it opens the app in a Widget mode
+
+<div align="center">
+  <a href="">
+    <img src="static/multiwell_plate_widget_controls.png" alt="Plate widget mode" />
+  </a>
+</div>
+
+White wells indicate empty and available positions for assigning the selected analyses. Gray wells indicate positions that are restricted by the positioning rules defined in the Worksheet Template. Orange wells indicate non-empty positions that are still eligible for assignment (for example, in self-assignment scenarios).
+
+In full-screen mode, the interface consists of three sections: the Unplated List (analyses not assigned to any well), the Plate View, and the Plate Contents List (analyses with assigned wells).
+
+To assign analyses to the plate, select the desired items from the Unplated List and drag and drop them onto an available well.
+
+<div align="center">
+  <a href="">
+    <img src="static/multiwell_fullscreen.png" alt="Plate fulscreen mode" />
+  </a>
+</div>
+
+To change the position of an assigned analysis, click it on the plate and drag it to an available well.
+
+To remove selected analyses from the plate, click the Remove button or press Backspace.
+
+To select all analyses in any list or on the plate, click “Select All” or press Ctrl (Command) + A. You can also hold Shift and drag to select multiple wells on the plate.
 
 ## Print pipetting plan
 

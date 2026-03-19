@@ -1,7 +1,7 @@
 import { useContext, useEffect, useImperativeHandle, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { AppContext } from './Layout.jsx';
 import { WorksheetPresenterContext } from '../App.jsx';
-import SideListDraggableItem from './SideListDraggableItem.jsx';
+import ListDraggableItem from './ListDraggableItem';
 import MultiSelectDropdown from './Controls/MultiSelectDropdown.jsx';
 import { pipe } from '../core/helpers/utilities.js';
 
@@ -93,6 +93,11 @@ function SideList({ ref, handleSelection, handleDeselection }) {
         [unassignedList, searchResultSet]
     );
 
+    const selectedCount = useMemo(
+        () => unassignedList.filter(item => item.isSelected).length,
+        [unassignedList]
+    );
+
     const sortedAndGroupedItems = useMemo(
         () => pipe(sortItems, groupItems, sortGroups)(filteredItems),
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -119,10 +124,14 @@ function SideList({ ref, handleSelection, handleDeselection }) {
         }
     };
 
+    const handleSelectAll = () => {
+        const allSelected = filteredItems.every(item => item.isSelected);
+        const uids = filteredItems.map(item => item.uid);
+        allSelected ? handleDeselection(uids) : handleSelection(uids);
+    };
+
     useImperativeHandle(ref, () => ({
-        handleSelectAll: () => {
-            handleSelection(filteredItems.map(item => item.uid))
-        },
+        handleSelectAll: () => handleSelectAll(),
         contains: (node) => domRef.current?.contains(node),
     }), [filteredItems]);
 
@@ -130,6 +139,7 @@ function SideList({ ref, handleSelection, handleDeselection }) {
         <div className="side-list-wrapper" ref={domRef} >
             <div className="sidelist-header">
                 <h3 className="sidelist-title">Unplated</h3>
+                <span className="side-drawer__total">{unassignedList.length}</span>
             </div>
             <div className="search-section">
                 <div className="search-wrapper">
@@ -218,8 +228,13 @@ function SideList({ ref, handleSelection, handleDeselection }) {
                 )}
             </div>
             <div className="side-list">
-                <div className="items-count">
-                    {filteredItems.length} found
+                <div className="sidelist-header">
+                    <div className="items-count">
+                        {filteredItems.length} found
+                    </div>
+                    <div onClick={() => handleSelectAll()} className="side_list__select-all-link-btn">
+                        Select All
+                    </div>
                 </div>
                 {[...sortedAndGroupedItems].map(([keyStr, items]) => {
                     const groups = JSON.parse(keyStr);
@@ -232,7 +247,7 @@ function SideList({ ref, handleSelection, handleDeselection }) {
                                 </div>
                             )}
                             {items.map(item => (
-                                <SideListDraggableItem
+                                <ListDraggableItem
                                     key={item.uid}
                                     item={item}
                                     isDragging={isDragging.current}
@@ -246,6 +261,15 @@ function SideList({ ref, handleSelection, handleDeselection }) {
                 })}
 
             </div>
+            {/* <div className={`list-selection-toolbar${selectedCount > 0 ? ' list-selection-toolbar--visible' : ''}`}>
+                <span className="list-selection-toolbar__count">{selectedCount} selected</span>
+                <button className="list-selection-toolbar__btn list-selection-toolbar__btn--danger" onClick={() => 0}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Unassign
+                </button>
+            </div> */}
         </div>
     );
 }

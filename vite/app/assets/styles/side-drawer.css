@@ -82,32 +82,3 @@
   color: #cbd5e1;
 }
 
-/* Item rows */
-.side-drawer__item {
-  padding: 0.3125rem 1rem 0.3125rem 1.25rem;
-  transition: background 0.1s;
-  cursor: default;
-}
-
-.side-drawer__item:hover {
-  background: #f8fafc;
-}
-
-.side-drawer__item-name {
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: #1e293b;
-  line-height: 1.4;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.side-drawer__item-meta {
-  font-size: 0.6875rem;
-  color: #94a3b8;
-  line-height: 1.35;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}

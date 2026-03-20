@@ -1,0 +1,32 @@
+<div xmlns="http://www.w3.org/1999/xhtml"
+     xmlns:tal="http://xml.zope.org/namespaces/tal"
+     xmlns:metal="http://xml.zope.org/namespaces/metal"
+     xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+     tal:omit-tag="">
+
+  <tal:widget define="terms    python:view.terms;
+                      selected python:view.selected_tokens;
+                      klass    python:view.klass;
+                      mode_klass python:'{}-display'.format(view.klass);">
+
+    <div tal:attributes="class string:${klass} ${mode_klass};">
+
+      <tal:selected tal:condition="python:len(selected) > 0">
+        <tal:items repeat="term terms">
+          <tal:match condition="python:term['token'] in selected">
+            <span class="multiselect-display-item"
+                  tal:content="python:term['title']">Item</span>
+            <tal:sep condition="python:not repeat['term'].end">, </tal:sep>
+          </tal:match>
+        </tal:items>
+      </tal:selected>
+
+      <tal:empty tal:condition="python:len(selected) == 0">
+        <span class="discreet">—</span>
+      </tal:empty>
+
+    </div>
+
+  </tal:widget>
+
+</div>

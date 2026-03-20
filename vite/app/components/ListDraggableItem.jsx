@@ -27,13 +27,13 @@ export function ListDraggableItem({ item, itemType, isDragging, fieldConfig, han
                 <div className="item-info">
                     <div className="item-name">
                         {Object.entries(data).map(([key, value]) => {
-                            if (!['both', 'title'].includes(fieldConfig[key]?.display_mode)) return null;
+                            if (!fieldConfig[key]?.display_mode.includes('title')) return null;
                             return <span key={key} className={`name-${key}`}>{value}&nbsp;</span>
                         })}
                     </div>
                     <div className="item-meta">
                         {Object.entries(data).map(([key, value]) => {
-                            if (!['both', 'description'].includes(fieldConfig[key]?.display_mode)) return null;
+                            if (!fieldConfig[key]?.display_mode.includes('description')) return null;
                             return <span key={key} className={`meta-${key}`}>{value}&nbsp;</span>
                         })}
                     </div>

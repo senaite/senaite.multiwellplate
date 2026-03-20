@@ -36,3 +36,8 @@ class IHiddenField(ITextLine):
 class IRecordFields(IList):
     """Marker interface for record fields
     """
+
+
+class IMultiSelectField(IList):
+    """Multi-select field storing a list of selected token values
+    """

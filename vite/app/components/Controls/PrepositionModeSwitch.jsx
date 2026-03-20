@@ -14,6 +14,7 @@ const PrepositionModeSwitch = () => {
         className={`switch-btn ${prepositionMode === 'row' ? 'active' : ''}`}
         onClick={() => presenter.setPrepositionMode('row')}
         aria-label="Rows preposition layout"
+        title='Rows preposition layout'
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <line x1="8" y1="6" x2="21" y2="6" />
@@ -28,6 +29,7 @@ const PrepositionModeSwitch = () => {
         className={`switch-btn ${prepositionMode === 'col' ? 'active' : ''}`}
         onClick={() => presenter.setPrepositionMode('col')}
         aria-label="Columns preposition layout"
+        title='Columns preposition layout'
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <rect x="3" y="3" width="7" height="7" />

@@ -18,10 +18,27 @@
 # Copyright 2026 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
-from .config import MultiWellPlateConfigSchema
-from .hiddenfield import HiddenField
-from .interfaces import IHiddenField
+from senaite.core.schema.fields import BaseField
+from zope.interface import implementer
+from zope.schema import List
+
 from .interfaces import IMultiSelectField
-from .interfaces import IRuleHeaderField
-from .multiselectfield import MultiSelectField
-from .ruleheaderfield import RuleHeaderField
+
+
+@implementer(IMultiSelectField)
+class MultiSelectField(List, BaseField):
+    """A field that stores a list of selected token values.
+
+    ``vocabulary_values`` is a list of dicts of the form::
+
+        [{"token": "stored_value", "title": "Display Label"}, ...]
+
+    The widget uses this list to render the dropdown options.
+    """
+
+    def __init__(self, vocabulary=None, **kwargs):
+        default = kwargs.get("default")
+        kwargs["default"] = default or []
+        self.vocabulary = vocabulary
+        List.__init__(self, **kwargs)
+        BaseField.__init__(self, **kwargs)

@@ -28,11 +28,13 @@ from senaite.core.z3cform.widgets.datagrid import DataGridWidgetFactory
 from senaite.core.z3cform.widgets.number import NumberWidget
 from z3c.form import error
 from z3c.form import validator
+from z3c.form.browser.checkbox import CheckBoxFieldWidget
 from zope import component
 from zope import schema
 from zope.interface import Interface
 
 from .hiddenfield import HiddenField
+from .multiselectfield import MultiSelectField
 from .ruleheaderfield import DEFAULT_RULE_HEADER
 from .ruleheaderfield import RuleHeaderField
 from senaite.multiwellplate import messageFactory as _
@@ -162,14 +164,14 @@ class IFieldRecordSchema(Interface):
         default=u""
     )
 
-    display_mode = schema.Choice(
+    display_mode = MultiSelectField(
         title=_(
-            u"label_displaye_mode",
+            u"label_display_mode",
             default=u"Display mode"
         ),
-        source="senaite.multiwellplate.vocabularies.displaymodes",
-        default="title",
-        required=True,
+        vocabulary="senaite.multiwellplate.vocabularies.displaymodes",
+        default=[],
+        required=False,
     )
 
     directives.widget("filter_by", klass="hide-title")

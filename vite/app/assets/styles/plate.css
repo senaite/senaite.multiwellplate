@@ -22,6 +22,21 @@
   user-select: none;
 }
 
+:is(.layout-app, .layout-container) .label:not(:empty) {
+  background-color: transparent;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background-color 0.15s ease;
+}
+
+:is(.layout-app, .layout-container) .label:not(:empty):hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+:is(.layout-app, .layout-container) .label--all-selected:not(:empty) {
+  outline: 2px solid #357ABD;
+}
+
 .well {
   aspect-ratio: 1 / 1;
   width: 2em;

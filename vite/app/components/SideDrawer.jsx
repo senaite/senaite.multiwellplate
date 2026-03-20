@@ -292,7 +292,10 @@ function SideDrawer({ ref, handleSelection, handleDeselection }) {
             </div>
             <div className={`list-selection-toolbar${selectedCount > 0 ? ' list-selection-toolbar--visible' : ''}`}>
                 <span className="list-selection-toolbar__count">{selectedCount} selected</span>
-                <button className="list-selection-toolbar__btn list-selection-toolbar__btn--warning" onMouseDown={(e) => e.stopPropagation()} onClick={() => handleRemoveSelected()}>
+                <button
+                    className="list-selection-toolbar__btn list-selection-toolbar__btn--warning"
+                    onMouseDown={(e) => e.stopPropagation()} onClick={() => handleRemoveSelected()}
+                    title="Remove selected analyses from plate">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>

@@ -89,7 +89,7 @@ function AppWellWrapper({ idx, isSelectable, isSelected, assignedAnalyses, prepo
                     onClick={(e) => onAnalysisClick(e, analysis.uid)}
                 >
                     {Object.entries(analysis).map(([key, value]) => {
-                        if (key === 'uid' || !fieldConfig || !['both', 'title'].includes(fieldConfig[key]?.display_mode)) return '';
+                        if (key === 'uid' || !fieldConfig || !fieldConfig[key]?.display_mode.includes('well')) return '';
                         return value
                     }).join(' ').trim()}
                 </div>

@@ -1,0 +1,18 @@
+<div xmlns="http://www.w3.org/1999/xhtml"
+     xmlns:tal="http://xml.zope.org/namespaces/tal"
+     xmlns:metal="http://xml.zope.org/namespaces/metal"
+     xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+     tal:omit-tag="">
+
+  <tal:widget define="name     python:view.name;
+                      selected python:view.selected_tokens;">
+
+    <tal:items repeat="token selected">
+      <input type="hidden"
+             tal:attributes="name  string:${name}:list;
+                             value token;" />
+    </tal:items>
+
+  </tal:widget>
+
+</div>

@@ -20,7 +20,7 @@
           "filterable": false,
           "groupable": false,
           "value": "obj.UID()",
-          "display_mode": "none"
+          "display_mode": []
         },
         keyword: {
           "sortable": true,
@@ -28,7 +28,7 @@
           "title": "Service Keyword",
           "filterable": true,
           "groupable": true,
-          "display_mode": "title",
+          "display_mode": ["title", "well"],
           "value": "obj.Keyword"
         },
         sampleId: {
@@ -37,7 +37,7 @@
           "title": "Sample ID",
           "filterable": true,
           "groupable": true,
-          "display_mode": "title",
+          "display_mode": ["title", "well"],
           "value": "obj.getRequest().getId()"
         },
         clientId: {
@@ -46,7 +46,7 @@
           "title": "Client ID",
           "filterable": false,
           "groupable": false,
-          "display_mode": "title",
+          "display_mode": ["title"],
           "value": "obj.getRequest().getClient().getClientID()"
         },
         serviceTitle: {
@@ -55,7 +55,7 @@
           "title": "Service Title",
           "filterable": true,
           "groupable": false,
-          "display_mode": "description",
+          "display_mode": ["description"],
           "value": "obj.getService().Title()"
         },
         clientName: {
@@ -64,7 +64,7 @@
           "title": "Client Name",
           "filterable": true,
           "groupable": true,
-          "display_mode": "description",
+          "display_mode": ["description"],
           "value": "obj.getRequest().getClient().getClientTitle()"
         }
 

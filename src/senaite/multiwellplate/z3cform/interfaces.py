@@ -31,3 +31,9 @@ class IRuleHeaderWidget(IWidget):
     """RuleHeader view widget
     """
     pass
+
+
+class IMultiSelectWidget(IWidget):
+    """MultiSelect view widget — dropdown with checkboxes
+    """
+    pass

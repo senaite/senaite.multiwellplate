@@ -27,8 +27,7 @@ from zope.schema.interfaces import IVocabularyFactory
 DISPLAY_MODES = (
     ("title", _("Title")),
     ("description", _("Description")),
-    ("both", _("Both")),
-    ("none", _("None")),
+    ("well", _("Well")),
 )
 
 

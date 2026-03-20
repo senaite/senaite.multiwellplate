@@ -56,13 +56,13 @@ function Well({ idx, children, ref, onWellClick, isDragging, isSelected,
                 <div key={key} className="item-content">
                   <div className="item-name">
                     {Object.entries(value).map(([fieldKey, fieldValue]) => {
-                      if (!['both', 'title'].includes(fieldConfig[fieldKey]?.display_mode)) return null;
+                      if (!fieldConfig[fieldKey]?.display_mode.includes('title')) return null;
                       return <span key={fieldKey} className={`name-${fieldKey}`}>{fieldValue}&nbsp;</span>
                     })}
                   </div>
                   <div className="item-meta">
                     {Object.entries(value).map(([fieldKey, fieldValue]) => {
-                      if (!['both', 'description'].includes(fieldConfig[fieldKey]?.display_mode)) return null;
+                      if (!fieldConfig[fieldKey]?.display_mode.includes('description')) return null;
                       return <span key={fieldKey} className={`meta-${fieldKey}`}>{fieldValue}&nbsp;</span>
                     })}
                   </div>

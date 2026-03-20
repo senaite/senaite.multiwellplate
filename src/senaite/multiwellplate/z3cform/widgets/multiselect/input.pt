@@ -1,0 +1,206 @@
+<div xmlns="http://www.w3.org/1999/xhtml"
+     xmlns:tal="http://xml.zope.org/namespaces/tal"
+     xmlns:metal="http://xml.zope.org/namespaces/metal"
+     xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+     tal:omit-tag="">
+
+  <tal:widget define="name            python:view.name;
+                      terms           python:view.terms;
+                      selected        python:view.selected_tokens;
+                      klass           python:view.klass;
+                      widget_id       python:view.id;">
+
+    <style tal:condition="python:True">
+      .multiselect-widget {
+        position: relative;
+        display: inline-block;
+        min-width: 200px;
+      }
+
+      .multiselect-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 0.2rem 0.4rem;
+        background: white;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        color: #495057;
+        box-sizing: border-box;
+        user-select: none;
+      }
+
+      .multiselect-toggle:hover {
+        border-color: #adb5bd;
+      }
+
+      .multiselect-toggle-label {
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .multiselect-toggle-arrow {
+        margin-left: 0.5rem;
+        transition: transform 0.2s ease;
+        flex-shrink: 0;
+      }
+
+      .multiselect-widget.multiselect--open .multiselect-toggle-arrow {
+        transform: rotate(180deg);
+      }
+
+      .multiselect-dropdown {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: white;
+        border: 1px solid #ced4da;
+        border-top: none;
+        border-radius: 0 0 4px 4px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .multiselect-widget.multiselect--open .multiselect-dropdown {
+        display: block;
+      }
+
+      .multiselect-option {
+        display: flex;
+        align-items: center;
+        padding: 0.2rem 0.4rem;
+        cursor: pointer;
+        font-size: 0.8rem;
+        color: #495057;
+        gap: 0.35rem;
+      }
+
+      .multiselect-option:hover {
+        background-color: #f8f9fa;
+      }
+
+      .multiselect-option input[type="checkbox"] {
+        margin: 0;
+        flex-shrink: 0;
+      }
+
+      .multiselect-option-label {
+        flex: 1;
+      }
+    </style>
+
+    <!-- Empty marker so extract() can tell the form was submitted -->
+    <input type="hidden"
+           tal:attributes="name string:${name}-empty-marker;
+                           id   string:${widget_id}-empty-marker;"
+           value="1" />
+
+    <div tal:attributes="class string:${klass};
+                         id    widget_id;">
+
+      <!-- Toggle button -->
+      <button type="button"
+              class="multiselect-toggle"
+              tal:attributes="data-placeholder string:Select...;
+                              data-widget-id   widget_id;">
+        <span class="multiselect-toggle-label">
+          <tal:selected tal:condition="python:len(selected) > 0">
+            <tal:titles repeat="term terms">
+              <tal:match condition="python:term['token'] in selected">
+                <tal:sep condition="python:repeat['term'].index > 0">, </tal:sep>
+                <tal:title replace="python:term['title']" />
+              </tal:match>
+            </tal:titles>
+          </tal:selected>
+          <tal:placeholder tal:condition="python:len(selected) == 0">
+            Select...
+          </tal:placeholder>
+        </span>
+        <svg class="multiselect-toggle-arrow"
+             width="12" height="12" viewBox="0 0 12 12"
+             fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 4L6 8L10 4" stroke="#6c757d" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <!-- Dropdown list -->
+      <div class="multiselect-dropdown">
+        <tal:options repeat="term terms">
+          <tal:define define="token  python:term['token'];
+                              title  python:term['title'];
+                              cb_id  python:'{}-{}'.format(widget_id, token);
+                              checked python:token in selected;">
+            <label class="multiselect-option"
+                   tal:attributes="for cb_id;">
+              <input type="checkbox"
+                     tal:attributes="id      cb_id;
+                                     name    string:${name}:list;
+                                     value   token;
+                                     checked python:'checked' if checked else None;" />
+              <span class="multiselect-option-label"
+                    tal:content="title">Option</span>
+            </label>
+          </tal:define>
+        </tal:options>
+      </div>
+
+    </div>
+
+    <script tal:content="string:
+      (function () {
+        var container = document.getElementById('${widget_id}');
+        if (!container) return;
+
+        var toggle = container.querySelector('.multiselect-toggle');
+        var checkboxes = Array.prototype.slice.call(
+          container.querySelectorAll('.multiselect-option input[type=&quot;checkbox&quot;]')
+        );
+        var placeholder = toggle.getAttribute('data-placeholder') || 'Select...';
+
+        function updateLabel() {
+          var selected = checkboxes
+            .filter(function (cb) { return cb.checked; })
+            .map(function (cb) {
+              var lbl = cb.parentElement.querySelector('.multiselect-option-label');
+              return lbl ? lbl.textContent.trim() : cb.value;
+            });
+          var labelEl = toggle.querySelector('.multiselect-toggle-label');
+          labelEl.textContent = selected.length ? selected.join(', ') : placeholder;
+        }
+
+        toggle.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var isOpen = container.classList.contains('multiselect--open');
+          document.querySelectorAll('.multiselect-widget.multiselect--open').forEach(function (el) {
+            el.classList.remove('multiselect--open');
+          });
+          if (!isOpen) {
+            container.classList.add('multiselect--open');
+          }
+        });
+
+        checkboxes.forEach(function (cb) {
+          cb.addEventListener('change', updateLabel);
+        });
+
+        document.addEventListener('click', function (e) {
+          if (!container.contains(e.target)) {
+            container.classList.remove('multiselect--open');
+          }
+        });
+      }());
+    "></script>
+
+  </tal:widget>
+
+</div>

@@ -1,0 +1,41 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:z3c="http://namespaces.zope.org/z3c"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    i18n_domain="z3c.form">
+
+  <!-- MultiSelect widget factory adapter -->
+  <adapter
+      factory=".widget.MultiSelectWidgetFactory"
+      for="senaite.multiwellplate.schema.interfaces.IMultiSelectField
+           senaite.multiwellplate.interfaces.ISenaiteMultiWellPlateLayer"
+  />
+
+  <!-- MultiSelect data converter between field and widget -->
+  <adapter factory=".widget.MultiSelectDataConverter" />
+
+  <!-- MultiSelect input widget template -->
+  <z3c:widgetTemplate
+      mode="input"
+      widget=".widget.MultiSelectWidget"
+      template="input.pt"
+      layer="senaite.multiwellplate.interfaces.ISenaiteMultiWellPlateLayer"
+  />
+
+  <!-- MultiSelect display widget template -->
+  <z3c:widgetTemplate
+      mode="display"
+      widget=".widget.MultiSelectWidget"
+      template="display.pt"
+      layer="senaite.multiwellplate.interfaces.ISenaiteMultiWellPlateLayer"
+  />
+
+  <!-- MultiSelect hidden widget template -->
+  <z3c:widgetTemplate
+      mode="hidden"
+      widget=".widget.MultiSelectWidget"
+      template="hidden.pt"
+      layer="senaite.multiwellplate.interfaces.ISenaiteMultiWellPlateLayer"
+  />
+
+</configure>

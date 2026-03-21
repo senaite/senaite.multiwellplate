@@ -104,6 +104,11 @@ function SideList({ ref, handleSelection, handleDeselection }) {
         [filteredItems, filters.analyses.sortBy, filters.analyses.sortOrder, filters.analyses.groupBy]
     );
 
+    useEffect(() => {
+        const orderedUids = [...sortedAndGroupedItems.values()].flat().map(item => item.uid);
+        presenter.setListOrder(orderedUids);
+    }, [sortedAndGroupedItems]);
+
     const selectGroup = (group) => handleSelection(sortedAndGroupedItems.get(group).map(item => item.uid));
     const deselectGroup = (group) => handleDeselection(sortedAndGroupedItems.get(group).map(item => item.uid));;
 

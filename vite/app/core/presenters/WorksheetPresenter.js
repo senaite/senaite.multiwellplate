@@ -21,6 +21,7 @@ class WorksheetPresenter {
     this.isLoading = false;
     this.error = null;
     this.selectedAnalyses = new Set();
+    this.listOrder = [];
     this.nextAssignments = [];
     this.nextAction = null;
     this.currentPreposition = {};
@@ -293,7 +294,16 @@ class WorksheetPresenter {
     return Object.keys(this.model.analyses).filter(key => !this.model.analyses[key].wellIdx);
   }
 
+  setListOrder(uids) {
+    this.listOrder = uids;
+  }
+
   getSelectedAnalyses() {
+    if (this.listOrder.length) {
+      const ordered = this.listOrder.filter(uid => this.selectedAnalyses.has(uid));
+      const rest = Array.from(this.selectedAnalyses).filter(uid => !this.listOrder.includes(uid));
+      return [...ordered, ...rest];
+    }
     return Array.from(this.selectedAnalyses);
   }
 

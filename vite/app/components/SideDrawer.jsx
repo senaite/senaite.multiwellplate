@@ -104,6 +104,15 @@ function SideDrawer({ ref, handleSelection, handleDeselection }) {
         [filteredItems, filters.analyses.sortBy, filters.analyses.sortOrder, filters.analyses.groupBy]
     );
 
+    useEffect(() => {
+        const orderedUids = [...groupedItems.values()].flatMap(items =>
+            Object.entries(items.reduce((wells, item) => { (wells[item.wellIdx] ??= []).push(item); return wells; }, {}))
+                .sort(([a], [b]) => a - b)
+                .flatMap(([, wellItems]) => wellItems.map(item => item.uid))
+        );
+        presenter.setListOrder(orderedUids);
+    }, [groupedItems]);
+
     const handleItemClick = (item) => {
         item.isSelected ? handleDeselection(item.uid) : handleSelection(item.uid);
     };

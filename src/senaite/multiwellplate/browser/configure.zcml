@@ -5,7 +5,8 @@
         i18n_domain="senaite.multiwellplate">
 
     <include package=".form"/>
-    <include package=".viewlets" />
+    <include package=".theme"/>
+    <include package=".viewlets"/>
 
     <browser:page
         name="analyses_classic_view"

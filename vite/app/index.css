@@ -1,5 +1,34 @@
+
 @import 'assets/styles/layout.css';
-@import 'assets/styles/side-list.css';
-@import 'assets/styles/side-drawer.css';
-@import 'assets/styles/plate.css';
 @import 'assets/styles/main.css';
+@import 'assets/styles/top-bar.css';
+@import 'assets/styles/workspace.css';
+@import 'assets/styles/side-list.css';
+@import 'assets/styles/plate.css';
+
+
+#senaite-multiwellplate-app {
+  box-sizing: border-box;
+  --plate-gap: 0.5em;
+  --plate-zIndex: 1000;
+  --narrow-breakpoint: 768px;
+  --wide-breakpoint: 1200px;
+
+  /* Color tokens */
+  --color-primary: #3b82f6;
+  --color-primary-dark: #2563eb;
+  --color-primary-bg: #eff6ff;
+  --color-primary-light: #dbeafe;
+  --color-primary-border: #bfdbfe;
+  --color-primary-ring: rgba(59, 130, 246, 0.1);
+
+  /* Border radius tokens */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+}
+
+#senaite-multiwellplate-app > div[class*="layout-widget"], div[class*="layout-app"] {
+  line-height: initial;
+  z-index: var(--plate-zIndex);
+}

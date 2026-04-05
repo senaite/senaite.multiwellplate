@@ -1,18 +1,16 @@
 import { cleanAndJoinClasses } from '../utils/helpers.js';
 
 
-function Well({ idx, children, ref, onWellClick, isDragging, isSelected,
-  assignedAnalyses, prepositionedItems, prepositionMode, fieldConfig, isAssignable }) {
+function Well({ idx, children, ref, onWellClick, isSelected,
+  assignedAnalyses, showOverlay, prepositionedItems, prepositionMode, fieldConfig, isAssignable }) {
 
-  const prepositioned = prepositionedItems || {};
   const wellClasses = ['well', 'element',
     isSelected ? 'well--selected' : '',
     assignedAnalyses.length > 0 ? 'well--has-analyses' : 'well--empty',
-    (isAssignable === false) ? 'well--not-assignable': '',
-    Object.keys(prepositioned).length && isDragging ? 'well--is-prepositioned' : '',
+    (isAssignable === false) ? 'well--not-assignable' : '',
+    showOverlay ? 'well--is-prepositioned' : '',
   ]
 
-  const showOverlay = isDragging && Object.keys(prepositioned).length > 0;
   const overlayItemsStyle = {
     '--position-anchor': `--well-${idx}`,
     top: `anchor(${prepositionMode === 'row' ? 'bottom' : 'top'})`,
@@ -51,7 +49,7 @@ function Well({ idx, children, ref, onWellClick, isDragging, isSelected,
       {(showOverlay) && (
         <div className="drag-overlay-item-on-well" style={overlayItemsStyle}>
           <div className="drag-overlay-item">
-            {Object.entries(prepositioned).map(([key, value]) => {
+            {Object.entries(prepositionedItems || {}).map(([key, value]) => {
               return (
                 <div key={key} className="item-content">
                   <div className="item-name">

@@ -1,0 +1,19 @@
+<configure
+        xmlns="http://namespaces.zope.org/zope"
+        i18n_domain="senaite.multiwellplate">
+
+    <subscriber
+        for="senaite.core.browser.worksheets.view.WorksheetsView
+             senaite.core.interfaces.IWorksheets"
+        provides="senaite.app.listing.interfaces.IListingViewAdapter"
+        factory=".worksheets.MultiwellPlateWorksheetsView"
+    />
+
+    <subscriber
+        for="senaite.core.browser.controlpanel.worksheettemplates.view.WorksheetTemplatesView
+             senaite.core.interfaces.IWorksheetTemplates"
+        provides="senaite.app.listing.interfaces.IListingViewAdapter"
+        factory=".worksheettemplates.MultiwellPlateWorksheetTemplatesView"
+    />
+
+</configure>

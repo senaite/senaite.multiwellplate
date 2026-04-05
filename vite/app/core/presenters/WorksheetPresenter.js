@@ -10,6 +10,7 @@ const generatorFnSelector = {
 const listeners = new Set();
 const unassignedListeners = new Set();
 const assignedListeners = new Set();
+const wellListeners = new Map();
 const snapshots = new Map();
 
 class WorksheetPresenter {
@@ -30,6 +31,16 @@ class WorksheetPresenter {
 
   updateView() {
     listeners.forEach(listener => listener());
+  }
+
+  _notifyWell(idx) {
+    wellListeners.get(idx)?.forEach(l => l());
+  }
+
+  subscribeWell(idx, listener) {
+    if (!wellListeners.has(idx)) wellListeners.set(idx, new Set());
+    wellListeners.get(idx).add(listener);
+    return () => wellListeners.get(idx)?.delete(listener);
   }
 
   updateWellView(wellIdx) {
@@ -147,7 +158,7 @@ class WorksheetPresenter {
 
   updateStore(idx) {
     if (this._syncWellSnapshot(idx)) {
-      this.updateView();
+      this._notifyWell(idx);
     }
   }
 
@@ -247,7 +258,7 @@ class WorksheetPresenter {
         this.selectedAnalyses.add(uid);
       }
     });
-    this._syncWellSnapshot(wellIdx);
+    this.updateStore(wellIdx);
     this.updateAnalysesList();
   }
 
@@ -257,8 +268,15 @@ class WorksheetPresenter {
         this.selectedAnalyses.delete(uid);
       }
     });
-    this._syncWellSnapshot(wellIdx);
+    this.updateStore(wellIdx);
     this.updateAnalysesList();
+  }
+
+  getAnalysesUidsByWellIndices(wellIndices) {
+    const set = new Set(wellIndices);
+    return Object.entries(this.model.analyses)
+      .filter(([, a]) => set.has(a.wellIdx))
+      .map(([uid]) => uid);
   }
 
   deselectAllWells() {
@@ -323,14 +341,14 @@ class WorksheetPresenter {
   extendSelectedAnalyses(uids) {
     const affectedWells = new Set(uids.map(uid => this.model.analyses[uid]?.wellIdx).filter(Boolean));
     uids.forEach(uid => this.selectedAnalyses.add(uid));
-    affectedWells.forEach(wellIdx => this._syncWellSnapshot(wellIdx));
+    affectedWells.forEach(wellIdx => this.updateStore(wellIdx));
     this.updateAnalysesList();
   }
 
   select(uid) {
     this.selectedAnalyses.add(uid);
     if (this.model.analyses[uid]?.wellIdx) {
-      this._syncWellSnapshot(this.model.analyses[uid].wellIdx);
+      this.updateStore(this.model.analyses[uid].wellIdx);
     }
     this.updateAnalysesList();
   }
@@ -338,7 +356,7 @@ class WorksheetPresenter {
   deselect(uid) {
     this.selectedAnalyses.delete(uid);
     if (this.model.analyses[uid]?.wellIdx) {
-      this._syncWellSnapshot(this.model.analyses[uid].wellIdx);
+      this.updateStore(this.model.analyses[uid].wellIdx);
     }
     this.updateAnalysesList();
   }
@@ -392,14 +410,14 @@ class WorksheetPresenter {
   selectMany(uids) {
     const affectedWells = new Set(uids.map(uid => this.model.analyses[uid]?.wellIdx).filter(Boolean));
     uids.forEach(uid => this.selectedAnalyses.add(uid));
-    affectedWells.forEach(wellIdx => this._syncWellSnapshot(wellIdx));
+    affectedWells.forEach(wellIdx => this.updateStore(wellIdx));
     this.updateAnalysesList();
   }
 
   deselectMany(uids) {
     const affectedWells = new Set(uids.map(uid => this.model.analyses[uid]?.wellIdx).filter(Boolean));
     uids.forEach(uid => this.selectedAnalyses.delete(uid));
-    affectedWells.forEach(wellIdx => this._syncWellSnapshot(wellIdx));
+    affectedWells.forEach(wellIdx => this.updateStore(wellIdx));
     this.updateAnalysesList();
   }
 
@@ -449,9 +467,7 @@ class WorksheetPresenter {
     const prevPreposition = this.currentPreposition;
     this.currentPreposition = preposition;
     const wells = new Set([...Object.values(prevPreposition), ...Object.values(preposition)]);
-    let changed = false;
-    wells.forEach(wellIdx => { if (this._syncWellSnapshot(wellIdx)) changed = true; });
-    if (changed) this.updateView();
+    wells.forEach(wellIdx => this.updateStore(wellIdx));
   }
 
   async evaluateRules(facts) {

@@ -1,11 +1,10 @@
-import { useContext } from "react";
-import { WorksheetPresenterContext } from '../App.jsx';
-import { useDraggable } from "@dnd-kit/react";
+import { useState } from 'react';
+import { useDragDropMonitor, useDraggable } from "@dnd-kit/react";
+import { cleanAndJoinClasses } from '../../utils/helpers.js';
 
 
-export function ListDraggableItem({ item, itemType, isDragging, fieldConfig, handleItemClick}) {
+export function ListDraggableItem({ item, itemType, fieldConfig, handleItemClick }) {
 
-    const presenter = useContext(WorksheetPresenterContext);
     const { ref: setDraggableNodeRef, handleRef: setHandleNodeRef } = useDraggable({
         id: item,
         disabled: !item.isSelected,
@@ -14,14 +13,33 @@ export function ListDraggableItem({ item, itemType, isDragging, fieldConfig, han
 
     const data = item.data;
 
+    const [isDragging, setIsDragging] = useState(false);
+
+    useDragDropMonitor({
+        onDragStart(event, manager) {
+            item.isSelected && setIsDragging(true);
+        },
+        onDragEnd(event, manager) {
+            item.isSelected && setIsDragging(false);
+        },
+        onDragCancel(event, manager) {
+            item.isSelected && setIsDragging(false);
+        },
+    }
+    );
+
+    const itemClasses = [
+        'item-card', 
+        item.isSelected ? 'selected' : '', 
+        item.isSelected && isDragging ? 'dragging' : ''
+    ]
+
     return (
-        <button
+        <div
             key={item}
             onClick={() => handleItemClick(item)}
             ref={node => { setDraggableNodeRef(node); setHandleNodeRef(node); }}
-            className={`item-card
-                        ${item.isSelected ? 'selected' : ''}
-                        ${item.isSelected && isDragging ? 'dragging' : ''}`}
+            className={cleanAndJoinClasses(itemClasses)}
         >
             <div className="item-content">
                 <div className="item-info">
@@ -46,7 +64,7 @@ export function ListDraggableItem({ item, itemType, isDragging, fieldConfig, han
                     </div>
                 )}
             </div>
-        </button>
+        </div>
     );
 }
 

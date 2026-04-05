@@ -5,7 +5,7 @@ function AppControls({ title, onClose, toggleAppMode, mode }) {
     const isAppMode = isOpen(mode) && !isWidget(mode);
 
     return (
-        <div className={`title-bar ${isWidgetMode ? 'title-bar--widget' : ''}`}>
+        <div className={`top-bar ${isWidgetMode ? 'top-bar--widget' : ''}`}>
             <div className="app-controls-left">
                 <button
                     onClick={onClose}

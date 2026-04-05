@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState, useSyncExternalStore } from "react";
+import { useContext, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useDraggable, useDroppable } from '@dnd-kit/react';
 import { pointerIntersection } from '@dnd-kit/collision';
 import { isWidget } from "../utils/helpers.js";
@@ -35,7 +35,6 @@ function WidgetWellWrapper({ idx, assignedAnalyses, anchor }) {
 
 function AppWellWrapper({ idx, isSelectable, isSelected, assignedAnalyses, prepositionedItems, selectedAnalyses }) {
     const presenter = useContext(WorksheetPresenterContext);
-    const { isDragging } = useContext(AppContext);
     const isDroppable = !isSelectable;
     const fieldConfig = presenter.getConfig().fields;
 
@@ -49,6 +48,12 @@ function AppWellWrapper({ idx, isSelectable, isSelected, assignedAnalyses, prepo
         id: idx,
         collisionDetector: pointerIntersection,
     });
+
+    const [showOverlay, setShowOverlay] = useState(false);
+
+    useEffect(() => {
+        setShowOverlay(Object.keys(prepositionedItems || {}).length > 0);
+    }, [prepositionedItems]);
 
     const onWellClick = () => {
         const hasNotSelected = !assignedAnalyses.every(analysis => selectedAnalyses.includes(analysis.uid));
@@ -72,7 +77,7 @@ function AppWellWrapper({ idx, isSelectable, isSelected, assignedAnalyses, prepo
             onWellClick={onWellClick}
             isSelected={isSelected}
             isDroppable={isDroppable}
-            isDragging={isDragging.current}
+            showOverlay={ showOverlay} 
             prepositionedItems={prepositionedItems}
             prepositionMode={presenter.getPrepositionMode()}
             assignedAnalyses={assignedAnalyses}
@@ -101,7 +106,7 @@ function AppWellWrapper({ idx, isSelectable, isSelected, assignedAnalyses, prepo
 function WellWrapper({ idx }) {
     const presenter = useContext(WorksheetPresenterContext);
     const { mode, anchor } = useContext(AppContext);
-    const wellData = useSyncExternalStore(presenter.subscribe, () => presenter.getWellDataSnapshot(idx));
+    const wellData = useSyncExternalStore((listener) => presenter.subscribeWell(idx, listener), () => presenter.getWellDataSnapshot(idx));
 
     return isWidget(mode) ?
         <WidgetWellWrapper

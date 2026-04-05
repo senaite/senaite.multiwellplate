@@ -4,14 +4,25 @@
 
 .plate-container {
   display: grid;
-  grid-template-columns: 1em repeat(var(--cols), 1fr);
-  grid-template-rows: 1em repeat(var(--rows), 1fr);
-  gap: var(--plate-gap);
+  grid-template-columns: 1rem repeat(var(--cols), 1fr);
+  grid-template-rows: 1rem repeat(var(--rows), 1fr);
+  gap: 0;
   grid-auto-flow: row;
   background-color: #C7CBD2;
-  border-radius: 0 0 5px 5px;
-  padding: var(--plate-gap);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
   height: auto;
+  padding: 0.5rem;
+  max-height: fit-content;
+
+  @container style(--workspace-layout: wide) {
+    gap: var(--plate-gap);
+  }
+}
+
+:is(.layout-widget) .plate-container {
+  margin: 0;
+  padding: 0.5rem;
+  gap: var(--plate-gap);
 }
 
 .label:not(:empty) {
@@ -34,7 +45,7 @@
 }
 
 :is(.layout-app, .layout-container) .label--all-selected:not(:empty) {
-  outline: 2px solid #357ABD;
+  outline: 2px solid var(--color-primary);
 }
 
 .well {
@@ -98,6 +109,11 @@
   border-radius: 0;
   border: 0.25em solid transparent;
   background-color: transparent;
+
+  @container style(--workspace-layout: narrow) or (orientation: landscape) {
+    aspect-ratio: 1/1;
+    width: calc(100cqw / calc(var(--cols)*1.5));
+  }
 }
 
 
@@ -142,10 +158,10 @@
   }
 
   .well-analyses-list-container {
-    overflow-y: auto;
+    overflow-y: scroll;
     flex: 1;
     padding: 0;
-    margin: 0;
+    margin-left: 0.2rem;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -159,21 +175,19 @@
   .well-analyses-list-item {
     font-size: 0.75em;
     padding: 0.1em 0.2em;
-    max-width: 2em;
     text-wrap-mode: nowrap;
-    text-overflow: clip;
-    margin-left: 0.2em;
+    text-overflow: ellipsis;
+    padding-left: 0.2rem;
     border-left: 2px solid transparent;
   }
 
   .well-analyses-list-item--selected {
     font-weight: bold;
-    border-left: 2px solid #357ABD;
+    border-left: 2px solid var(--color-primary);
   }
 
   .well-analyses-list-item:hover {
     background-color: rgba(0, 0, 0, 0.05);
-    padding-left: 0.4em;
   }
 
   .well-analyses-list-item:active {
@@ -190,11 +204,11 @@
 
 :is(.layout-app, .layout-container) .well.well--has-analyses .well-inner {
   background-color: coral;
-  border-color: coral;
+  border: 3px solid coral;
 }
 
 :is(.layout-app, .layout-container) .well.well--selected .well-inner {
-  border: 3px solid #357ABD;
+  border: 3px solid var(--color-primary);
 }
 
 .well--selected .well-inner:hover {
@@ -216,7 +230,7 @@
 
 .well--is-prepositioned .well-inner,
 .well.well--has-analyses.well--is-prepositioned .well-inner {
-  border: 3px dashed #357ABD;
+  border: 3px dashed var(--color-primary);
   background-color: lightpink;
 }
 
@@ -224,17 +238,17 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0.5rem;
+  padding: 0 0.375rem;
   background: linear-gradient(to bottom, #ffffff, #fafafa);
   border-bottom: 1px solid #e5e7eb;
-  min-height: 2.5rem;
+  min-height: 1.75rem;
 }
 
 .preposition-mode-switch {
   display: inline-flex;
   background: #f3f4f6;
-  border-radius: 0.5rem;
-  padding: 0.25rem;
+  border-radius: 0.375rem;
+  padding: 0 0.125rem;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
@@ -242,10 +256,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.375rem 0.625rem;
+  padding: 0.1875rem 0.375rem;
   border: none;
   background: transparent;
-  border-radius: 0.375rem;
+  border-radius: 0.25rem;
   cursor: pointer;
   color: #6b7280;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -253,8 +267,8 @@
 }
 
 .switch-btn svg {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   transition: all 0.2s;
 }
 
@@ -265,7 +279,7 @@
 
 .switch-btn.active {
   background: white;
-  color: #3b82f6;
+  color: var(--color-primary);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -300,8 +314,8 @@
 
 .drag-overlay-item {
   background: white;
-  border: 2px solid #357ABD;
-  border-radius: 6px;
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-md);
   padding: 6px 10px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25), 0 4px 8px rgba(0, 0, 0, 0.15);
   max-width: 200px;

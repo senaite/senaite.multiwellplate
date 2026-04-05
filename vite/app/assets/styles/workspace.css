@@ -1,0 +1,66 @@
+@property --workspace-layout {
+    syntax: "narrow | mid | wide";
+    inherits: true;
+    initial-value: narrow;
+}
+
+.layout-app .workspace {
+    padding: 0;
+}
+
+:is(.layout-app, .layout-container) .workspace {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    display: grid;
+    gap: 0.5em;
+    overflow: hidden;
+    --workspace-layout: initial;
+
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto 1fr;
+    grid-template-areas: "unassigned" 
+                         "plate" 
+                         "assigned";
+
+    @container (768px <=width <=1200px) {
+        --workspace-layout: mid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: min-content 1fr;
+        grid-template-areas:
+            "unassigned plate"
+            "unassigned assigned";
+    }
+
+    @container (width > 1200px) {
+        --workspace-layout: wide;
+        grid-template-columns: 18vi auto 18vi;
+        grid-template-rows: 1fr;
+        grid-template-areas: "unassigned plate assigned";
+    }
+
+}
+
+
+/* Grid area assignments */
+.workspace-unassigned {
+    grid-area: unassigned;
+    container-name: unassigned-list;
+    container-type: size;
+    display: flex;
+    flex-direction: column;
+}
+
+.workspace-plate {
+    grid-area: plate;
+    container-name: plate-panel;
+    container-type: inline-size;
+}
+
+.workspace-assigned {
+    grid-area: assigned;
+    container-name: assigned-list;
+    container-type: size;
+    display: flex;
+    flex-direction: column;
+}

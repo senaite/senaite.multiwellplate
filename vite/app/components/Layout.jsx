@@ -18,7 +18,6 @@ function Layout({ startMode }) {
     const [mode, setMode] = useState(startMode || DEFAULT_LAYOUT_MODE);
     const [anchor, setAnchor] = useState(null);
     const containerRef = useRef(null);
-    const isDragging = useRef(false);
 
     const toggleAppMode = () => {
         const nextMode = isWidget(mode) ? APP_LAYOUT_MODE : WIDGET_LAYOUT_MODE;
@@ -53,27 +52,24 @@ function Layout({ startMode }) {
         ...(anchor && { positionAnchor: `--${anchor}` })
     };
 
-    const appContext = { mode, anchor, isDragging };
+    const appContext = { mode, anchor};
 
 
     return (
         isOpen(mode) && (
             <AppContext.Provider value={appContext}>
-                <div className={layoutClass} style={layoutStyle} ref={containerRef}>
+                <div className={`layout ${layoutClass}`} style={layoutStyle} ref={containerRef}>
                     <div className={mainClass}>
                         {!isContainered(mode) &&
                             <AppControls title={presenter.getWorksheetId()} onClose={onClose} toggleAppMode={toggleAppMode} mode={mode} />
                         }
-                        <div className='workspace'>
-
-                            {isWidget(mode) ?
-                                <>
-                                    <div className="plate-container widget">
-                                        <WellsBlock rowsCount={rowsCount} colsCount={colsCount} />
-                                    </div>
-                                </>
-                                : <Workspace rowsCount={rowsCount} colsCount={colsCount} />}
-                        </div>
+                        {isWidget(mode) ?
+                            <>
+                                <div className="plate-container widget">
+                                    <WellsBlock rowsCount={rowsCount} colsCount={colsCount} />
+                                </div>
+                            </>
+                            : <Workspace rowsCount={rowsCount} colsCount={colsCount} />}
                     </div>
                 </div>
             </AppContext.Provider>

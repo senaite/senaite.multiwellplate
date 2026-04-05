@@ -1,20 +1,21 @@
-import { use, useContext, useEffect, useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { DragDropProvider, DragOverlay } from '@dnd-kit/react';
 import { SnapCenterToCursor } from "../utils/snapcentermodifier.js";
 import { PointerSensor, PointerActivationConstraints } from '@dnd-kit/dom';
 import { boxesIntersect, useSelectionContainer } from '@air/react-drag-to-select';
 import { AppContext } from "./Layout.jsx";
 import { WorksheetPresenterContext } from '../App.jsx';
-import { PlateTools } from "./Controls/PlateTools.jsx";
+import { PlateTools } from "./PlateToolbar/PlateTools.jsx";
 import WellsBlock from "./WellsBlock.jsx";
-import SideList from "./SideList.jsx";
-import SideDrawer from "./SideDrawer.jsx";
+import UnplatedAnalysesList from "./UnplatedAnalysesList.jsx";
+import PlatedAnalysesList from "./PlatedAnalysesList.jsx";
 import { useClickOutside, useDeleteAndBackspace, useSelectAllShortcut, useShiftState } from '../utils/hooks.jsx';
 
 
-function DragSelectionZone({ presenter, selectableItems, shiftKeyRef }) {
+
+function DragSelectionZone({ presenter, platePanelRef, shiftKeyRef }) {
     const [shiftKeyState, setShiftKeyState] = useState(false);
-    const [, setSelectionBox] = useState({});
+    const selectableItems = useRef([]);
 
     useShiftState((val) => {
         setShiftKeyState(val);
@@ -33,15 +34,20 @@ function DragSelectionZone({ presenter, selectableItems, shiftKeyRef }) {
         isEnabled: shiftKeyState,
         eventsElement: document.getElementById('elements-container'),
         onSelectionChange: (box) => {
-            setSelectionBox({ ...box });
+            const intersecting = [];
             selectableItems.current.forEach((item, index) => {
-                if (boxesIntersect(box, item)) {
-                    presenter.selectWell(index + 1);
-                }
+                if (boxesIntersect(box, item)) intersecting.push(index + 1);
             });
+            const uids = presenter.getAnalysesUidsByWellIndices(intersecting);
+            presenter.setSelectedAnalyses(uids);
         },
         onSelectionStart: () => {
             presenter.setSelectedAnalyses([]);
+            if (platePanelRef?.current) {
+                selectableItems.current = Array.from(platePanelRef.current.children)
+                    .filter(el => el.classList.contains("element"))
+                    .map(el => el.getBoundingClientRect());
+            }
         },
     });
 
@@ -51,13 +57,11 @@ function DragSelectionZone({ presenter, selectableItems, shiftKeyRef }) {
 
 function Workspace({ rowsCount, colsCount }) {
     const presenter = useContext(WorksheetPresenterContext);
-    const { isDragging } = useContext(AppContext);
     const plateToolsRef = useRef(null);
     const platePanelRef = useRef(null);
     const sideListPanelRef = useRef(null);
     const sideDrawerPanelRef = useRef(null);
     const activePanel = useRef('list');
-    const selectableItems = useRef([]);
     const shiftKeyRef = useRef(false);
 
     const sensors = [
@@ -75,12 +79,10 @@ function Workspace({ rowsCount, colsCount }) {
     }
 
     const onDragStart = (event, manager) => {
-        const dragOpType = event.operation.source.data.type;
         presenter.setNextAction(presenter.assignAnalyses.bind(presenter));
         presenter.setNextAssignments(
             presenter.getSelectedAnalyses().map(uid => ({ uid, wellIdx: presenter.findWellIdxByUid(uid) }))
         );
-        isDragging.current = dragOpType || true;
     };
 
     const onDragOver = (event, manager) => {
@@ -110,7 +112,6 @@ function Workspace({ rowsCount, colsCount }) {
             presenter.setNextAssignments(Object.entries(presenter.getCurrentPreposition()).map(([uid, wellIdx]) => ({ uid, wellIdx })));
             presenter.doNextAction()
         }
-        isDragging.current = false;
         presenter.setCurrentPreposition({});
         presenter.afterDragCleanUp();
     };
@@ -137,17 +138,6 @@ function Workspace({ rowsCount, colsCount }) {
 
     useDeleteAndBackspace(() => (activePanel.current === "plate" || activePanel.current === "drawer") && presenter.unassignSelected());
 
-    useEffect(() => {
-        if (platePanelRef?.current) {
-            selectableItems.current = [];
-            Array.from(platePanelRef.current.children)
-                .filter(element => element.classList.contains("element"))
-                .forEach((item) => {
-                    const { left, top, width, height } = item.getBoundingClientRect();
-                    selectableItems.current.push({ left, top, width, height, });
-                });
-        }
-    }, []);
 
     const handleSelection = (uids) => presenter.selectMany(Array.isArray(uids) ? uids : [uids]);
     const handleDeselection = (uids) => presenter.deselectMany(Array.isArray(uids) ? uids : [uids]);
@@ -161,28 +151,30 @@ function Workspace({ rowsCount, colsCount }) {
             onDragOver={onDragOver}
             onDragEnd={onDragEnd}
         >
-            <div className="workspace-sidelist" onFocus={() => activePanel.current = 'list'} tabIndex={0}>
-                <SideList
-                    ref={sideListPanelRef}
-                    handleSelection={handleSelection}
-                    handleDeselection={handleDeselection}
-                />
-            </div>
-            <div className="workspace-plate" onFocus={() => activePanel.current = 'plate'} tabIndex={0}>
-                <PlateTools ref={plateToolsRef} />
-                <div className="plate-container-wrapper">
-                    <DragSelectionZone presenter={presenter} selectableItems={selectableItems} shiftKeyRef={shiftKeyRef} />
-                    <div id="elements-container" className="plate-container" ref={platePanelRef} >
-                        <WellsBlock rowsCount={rowsCount} colsCount={colsCount} />
+            <div className="workspace">
+                <div className="workspace-unassigned" onFocus={() => activePanel.current = 'list'} tabIndex={0}>
+                    <UnplatedAnalysesList
+                        ref={sideListPanelRef}
+                        handleSelection={handleSelection}
+                        handleDeselection={handleDeselection}
+                    />
+                </div>
+                <div className="workspace-plate" onFocus={() => activePanel.current = 'plate'} tabIndex={0}>
+                    <PlateTools ref={plateToolsRef} />
+                    <div className="plate-container-wrapper">
+                        <DragSelectionZone presenter={presenter} platePanelRef={platePanelRef} shiftKeyRef={shiftKeyRef} />
+                        <div id="elements-container" className="plate-container" ref={platePanelRef} >
+                            <WellsBlock rowsCount={rowsCount} colsCount={colsCount} />
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div className="workspace-sidedrawer" onFocus={() => activePanel.current = 'drawer'} tabIndex={0}>
-                <SideDrawer
-                    ref={sideDrawerPanelRef}
-                    handleSelection={handleSelection}
-                    handleDeselection={handleDeselection}
-                />
+                <div className="workspace-assigned" onFocus={() => activePanel.current = 'drawer'} tabIndex={0}>
+                    <PlatedAnalysesList
+                        ref={sideDrawerPanelRef}
+                        handleSelection={handleSelection}
+                        handleDeselection={handleDeselection}
+                    />
+                </div>
             </div>
             <DragOverlay className="drag-overlay-pointer" />
         </DragDropProvider >

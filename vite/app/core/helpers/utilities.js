@@ -34,6 +34,7 @@ function findObjectsByType(obj, selector, results = []) {
   
   // Traverse all properties
   for (const key in obj) {
+    // eslint-disable-next-line no-prototype-builtins
     if (obj.hasOwnProperty(key)) {
       const value = obj[key];
       
@@ -103,6 +104,7 @@ const take = (n) => function* (iterable) {
 
 const toArray = (iterable) => Array.from(iterable);
 
+// eslint-disable-next-line no-unused-vars
 const coordsToIndex = ({ row, col, rowsCount, colsCount }) =>
   (row - 1) * colsCount + col;
 

@@ -3,8 +3,7 @@ import { DragDropProvider, DragOverlay } from '@dnd-kit/react';
 import { SnapCenterToCursor } from "../utils/snapcentermodifier.js";
 import { PointerSensor, PointerActivationConstraints } from '@dnd-kit/dom';
 import { boxesIntersect, useSelectionContainer } from '@air/react-drag-to-select';
-import { AppContext } from "./Layout.jsx";
-import { WorksheetPresenterContext } from '../App.jsx';
+import { AppContext } from "../AppContext.js";
 import { PlateTools } from "./PlateToolbar/PlateTools.jsx";
 import WellsBlock from "./WellsBlock.jsx";
 import UnplatedAnalysesList from "./UnplatedAnalysesList.jsx";
@@ -56,7 +55,7 @@ function DragSelectionZone({ presenter, platePanelRef, shiftKeyRef }) {
 
 
 function Workspace({ rowsCount, colsCount }) {
-    const presenter = useContext(WorksheetPresenterContext);
+    const { presenter } = useContext(AppContext);
     const plateToolsRef = useRef(null);
     const platePanelRef = useRef(null);
     const sideListPanelRef = useRef(null);
@@ -72,20 +71,20 @@ function Workspace({ rowsCount, colsCount }) {
         }),
     ];
 
-    const onBeforeDragStart = (event, manager) => {
+    const onBeforeDragStart = (event) => {
         if (shiftKeyRef.current) {
             event.preventDefault();
         }
     }
 
-    const onDragStart = (event, manager) => {
-        presenter.setNextAction(presenter.assignAnalyses.bind(presenter));
+    const onDragStart = () => {
+        presenter.setNextAction(presenter.placeAnalyses.bind(presenter));
         presenter.setNextAssignments(
             presenter.getSelectedAnalyses().map(uid => ({ uid, wellIdx: presenter.findWellIdxByUid(uid) }))
         );
     };
 
-    const onDragOver = (event, manager) => {
+    const onDragOver = (event) => {
 
         if (!event.operation.target) {
             presenter.setCurrentPreposition({});
@@ -107,7 +106,7 @@ function Workspace({ rowsCount, colsCount }) {
         });
     };
 
-    const onDragEnd = (event, manager) => {
+    const onDragEnd = (event) => {
         if (event.operation.target) {
             presenter.setNextAssignments(Object.entries(presenter.getCurrentPreposition()).map(([uid, wellIdx]) => ({ uid, wellIdx })));
             presenter.doNextAction()
@@ -133,10 +132,10 @@ function Workspace({ rowsCount, colsCount }) {
             sideDrawerPanelRef.current.handleSelectAll();
             return;
         }
-        presenter.selectMany(presenter.getAssignedAnalysesUids());
+        presenter.selectMany(presenter.getPlacedAnalysesUids());
     })
 
-    useDeleteAndBackspace(() => (activePanel.current === "plate" || activePanel.current === "drawer") && presenter.unassignSelected());
+    useDeleteAndBackspace(() => (activePanel.current === "plate" || activePanel.current === "drawer") && presenter.removeSelected());
 
 
     const handleSelection = (uids) => presenter.selectMany(Array.isArray(uids) ? uids : [uids]);

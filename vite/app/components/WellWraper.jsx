@@ -1,14 +1,13 @@
-import { useContext, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useContext, useEffect, useState, useSyncExternalStore } from "react";
 import { useDraggable, useDroppable } from '@dnd-kit/react';
 import { pointerIntersection } from '@dnd-kit/collision';
 import { isWidget } from "../utils/helpers.js";
-import { WorksheetPresenterContext } from '../App.jsx';
-import { AppContext } from "./Layout.jsx";
+import { AppContext } from "../AppContext.js";
 import Well from "./Well";
 
 
-function WidgetWellWrapper({ idx, assignedAnalyses, anchor }) {
-    const presenter = useContext(WorksheetPresenterContext);
+function WidgetWellWrapper({ idx, placedAnalyses }) {
+    const { presenter, anchor } = useContext(AppContext);
     const [ruleEval, setRuleEval] = useState(null);
 
     useEffect(() => {
@@ -20,21 +19,21 @@ function WidgetWellWrapper({ idx, assignedAnalyses, anchor }) {
             });
         };
         doEval().then((overallPass) => setRuleEval(overallPass));
-    }, []);
+    });
 
     const onWellClick = () => {
         if (ruleEval) {
-            presenter.setNextAction(presenter.assignAnalyses.bind(presenter));
+            presenter.setNextAction(presenter.placeAnalyses.bind(presenter));
             presenter.setNextAssignments([{ uid: anchor, wellIdx: idx }]);
             presenter.doNextAction();
         }
     };
 
-    return <Well idx={idx} onWellClick={onWellClick} assignedAnalyses={assignedAnalyses} isAssignable={ruleEval} />;
+    return <Well idx={idx} onWellClick={onWellClick} placedAnalyses={placedAnalyses} isAssignable={ruleEval} />;
 }
 
-function AppWellWrapper({ idx, isSelectable, isSelected, assignedAnalyses, prepositionedItems, selectedAnalyses }) {
-    const presenter = useContext(WorksheetPresenterContext);
+function AppWellWrapper({ idx, isSelectable, isSelected, placedAnalyses, prepositionedItems, selectedAnalyses }) {
+    const { presenter } = useContext(AppContext);
     const isDroppable = !isSelectable;
     const fieldConfig = presenter.getConfig().fields;
 
@@ -56,7 +55,7 @@ function AppWellWrapper({ idx, isSelectable, isSelected, assignedAnalyses, prepo
     }, [prepositionedItems]);
 
     const onWellClick = () => {
-        const hasNotSelected = !assignedAnalyses.every(analysis => selectedAnalyses.includes(analysis.uid));
+        const hasNotSelected = !placedAnalyses.every(analysis => selectedAnalyses.includes(analysis.uid));
         if (isSelectable && hasNotSelected) { presenter.selectWell(idx); return; }
         if (isSelectable && !hasNotSelected) { presenter.deselectWell(idx); return; }
         if (!isSelectable) presenter.setSelectedAnalyses([]);
@@ -80,14 +79,14 @@ function AppWellWrapper({ idx, isSelectable, isSelected, assignedAnalyses, prepo
             showOverlay={ showOverlay} 
             prepositionedItems={prepositionedItems}
             prepositionMode={presenter.getPrepositionMode()}
-            assignedAnalyses={assignedAnalyses}
+            placedAnalyses={placedAnalyses}
             fieldConfig={fieldConfig}
             ref={node => {
                 setDroppableNodeRef(node);
                 setDraggableNodeRef(node);
             }}
         >
-            {assignedAnalyses.map((analysis) => (
+            {placedAnalyses.map((analysis) => (
                 <div
                     key={analysis.uid}
                     className={`well-analyses-list-item ${selectedAnalyses.includes(analysis.uid) ? 'well-analyses-list-item--selected' : ''}`}
@@ -104,15 +103,13 @@ function AppWellWrapper({ idx, isSelectable, isSelected, assignedAnalyses, prepo
 }
 
 function WellWrapper({ idx }) {
-    const presenter = useContext(WorksheetPresenterContext);
-    const { mode, anchor } = useContext(AppContext);
+    const { presenter, mode } = useContext(AppContext);
     const wellData = useSyncExternalStore((listener) => presenter.subscribeWell(idx, listener), () => presenter.getWellDataSnapshot(idx));
 
     return isWidget(mode) ?
         <WidgetWellWrapper
             idx={idx}
-            assignedAnalyses={wellData.assignedAnalyses}
-            anchor={anchor} />
+            placedAnalyses={wellData.placedAnalyses} />
         :
         <AppWellWrapper idx={idx} {...wellData} />;
     ;

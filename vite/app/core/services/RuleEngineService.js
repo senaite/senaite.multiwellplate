@@ -1,9 +1,9 @@
 import { Engine, Rule } from 'json-rules-engine';
 import { findObjectsByType } from '../helpers/utilities.js';
 
-class RuleEngineService {
+export default class RuleEngineService {
 
-    constructor(model, rules = []) {
+    constructor(model) {
         this.model = model;
         this.engine = new Engine([], {
             cache: true, replaceFactsInEventParams: true
@@ -21,7 +21,7 @@ class RuleEngineService {
             try {
                 this.engine.addRule(new Rule(rule));
             } catch (error) {
-                console.error(`RULE INIT FAILED: ${index+1} ${rule}`)
+                console.error(`RULE INIT FAILED: ${index + 1} ${rule} - ${error.message}`);
             }
         }
     }
@@ -32,6 +32,7 @@ class RuleEngineService {
         this.engine.addFact('all-ids', () => Array.from({ length: this.model.rowsCount * this.model.colsCount }, (_, index) => index + 1));
 
         // function returning array of well indexes that are empty (no analyses assigned)
+        /* eslint-disable no-unused-vars */
         this.engine.addFact('empty-ids', async (params, almanac) => {
             const uid = Promise.resolve(almanac.factValue('uid'));
             const prepositioned = Promise.resolve(almanac.factValue('prepositioned'));
@@ -76,5 +77,3 @@ class RuleEngineService {
     }
 
 }
-
-export default RuleEngineService;

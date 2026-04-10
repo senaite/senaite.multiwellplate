@@ -2,11 +2,11 @@ import { cleanAndJoinClasses } from '../utils/helpers.js';
 
 
 function Well({ idx, children, ref, onWellClick, isSelected,
-  assignedAnalyses, showOverlay, prepositionedItems, prepositionMode, fieldConfig, isAssignable }) {
+  placedAnalyses, showOverlay, prepositionedItems, prepositionMode, fieldConfig, isAssignable }) {
 
   const wellClasses = ['well', 'element',
     isSelected ? 'well--selected' : '',
-    assignedAnalyses.length > 0 ? 'well--has-analyses' : 'well--empty',
+    placedAnalyses.length > 0 ? 'well--has-analyses' : 'well--empty',
     (isAssignable === false) ? 'well--not-assignable' : '',
     showOverlay ? 'well--is-prepositioned' : '',
   ]
@@ -26,9 +26,9 @@ function Well({ idx, children, ref, onWellClick, isSelected,
         onClick={onWellClick}
         style={{ anchorName: `--well-${idx}` }}
       >
-        {assignedAnalyses.length > 1 && <div className='well-analyses-counter-subscript'>{assignedAnalyses.length}</div>}
+        {placedAnalyses.length > 1 && <div className='well-analyses-counter-subscript'>{placedAnalyses.length}</div>}
         <div className='well-inner'>
-          {assignedAnalyses.length == 0 ? (
+          {placedAnalyses.length == 0 ? (
             <div className="well-center-header">
               <h2 >
                 {idx}

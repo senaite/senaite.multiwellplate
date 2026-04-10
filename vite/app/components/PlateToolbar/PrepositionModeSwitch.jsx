@@ -1,8 +1,8 @@
 import { useContext, useSyncExternalStore } from 'react';
-import { WorksheetPresenterContext } from '../../App.jsx';
+import { AppContext } from '../../AppContext';
 
 const PrepositionModeSwitch = () => {
-  const presenter = useContext(WorksheetPresenterContext);
+  const { presenter } = useContext(AppContext);
   const prepositionMode = useSyncExternalStore(
     presenter.subscribe,
     () => presenter.getPrepositionMode()

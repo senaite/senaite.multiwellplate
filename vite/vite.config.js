@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import generateFile from 'vite-plugin-generate-file';
+import { viteCommonjs } from '@originjs/vite-plugin-commonjs'
 
 const generateResources = {
     'js': [],
@@ -12,10 +13,16 @@ export default defineConfig(({ mode }) => {
 
     return {
         base: baseUrl,
+//        optimizeDeps: {
+//            include: ['json-rules-engine'],
+//        },
         build: {
             outDir: "../src/senaite/multiwellplate/browser/static/bundles",
             emptyOutDir: true,
             copyPublicDir: false,
+//            commonjsOptions: {
+//                include: [/json-rules-engine/, /node_modules/],
+//            },
             rollupOptions: {
                 input: {
                     app: './app/main.jsx',
@@ -38,6 +45,7 @@ export default defineConfig(({ mode }) => {
                     });
                 },
             },
+            viteCommonjs(),
             generateFile([{
                 type: 'template',
                 output: '../../viewlets/templates/front-app-resources.pt',

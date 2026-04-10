@@ -8,9 +8,8 @@ const cleanAndJoinClasses = (classesArray) => {
   return classesArray.join(' ').replaceAll(/\s+/gi, " ").trim();
 }
 
-
-
 export {
   isWidget, isOpen, isContainered,
-  cleanAndJoinClasses
+  cleanAndJoinClasses,
 }
+

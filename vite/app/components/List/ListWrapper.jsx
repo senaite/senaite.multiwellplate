@@ -1,5 +1,5 @@
 import { useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { WorksheetPresenterContext } from '../../App.jsx';
+import { AppContext } from '../../AppContext.js';
 import FilterPanel from './FilterPanel.jsx';
 import PanelHeader from './PanelHeader.jsx';
 import { pipe } from '../../core/helpers/utilities.js';
@@ -8,7 +8,7 @@ import { pipe } from '../../core/helpers/utilities.js';
 function ListWrapper({ ref, title, sourceItems, handleSelection, handleDeselection, getOrderedUids, children }) {
 
     const domRef = useRef(null);
-    const presenter = useContext(WorksheetPresenterContext);
+    const { presenter } = useContext(AppContext);
     const fieldConfig = presenter.getConfig().fields;
 
     const [filters, setFilters] = useState({

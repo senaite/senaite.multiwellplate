@@ -1,6 +1,5 @@
 import { useContext, useMemo, useSyncExternalStore } from 'react';
-import { AppContext } from './Layout.jsx';
-import { WorksheetPresenterContext } from '../App.jsx';
+import { AppContext } from '../AppContext.js';
 import ListDraggableItem from './List/ListDraggableItem.jsx';
 import ListWrapper from './List/ListWrapper.jsx';
 
@@ -20,8 +19,8 @@ function groupByWell(items) {
 
 function PlatedAnalysesList({ ref, handleSelection, handleDeselection }) {
 
-    const presenter = useContext(WorksheetPresenterContext);
-    const analysesList = useSyncExternalStore(presenter.subscribeAssigned, () => presenter.getAssignedListSnapshot());
+    const { presenter } = useContext(AppContext);
+    const analysesList = useSyncExternalStore(presenter.subscribePlaced, () => presenter.getPlacedListSnapshot());
 
     const { colsCount } = presenter.getConfig();
 
@@ -34,7 +33,7 @@ function PlatedAnalysesList({ ref, handleSelection, handleDeselection }) {
         const selectedUids = Object.entries(analysesList)
             .filter(([, item]) => item.isSelected)
             .map(([uid]) => uid);
-        presenter.unassignMany(selectedUids);
+        presenter.removeMany(selectedUids);
     };
 
     const getOrderedUids = (groupedItems) =>

@@ -5,22 +5,24 @@
 }
 
 .list-wrapper {
+  flex: 1;
   display: grid;
   overflow: hidden;
   min-height: 0;
   background: white;
   border-right: 1px solid #f1f5f9;
   grid-template-columns: auto 1fr;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: repeat(3, min-content) 1fr;
   grid-template-areas: "list-header list-filter"
+    "list-selected list-selected"
     "list-body list-body";
   --list-appearance: initial;
 
    @container (width < 50vw) {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto 1fr;
     grid-template-areas: "list-header"
       "list-filter"
+      "list-selected"
       "list-body";
     --list-appearance: vertical;
   }
@@ -287,6 +289,7 @@
 
 .list-header {
   grid-column: 2 span;
+  grid-area: list-selected;
   display: flex;
   align-items: center;
   padding: 0;
@@ -299,11 +302,13 @@
 
 .list {
   display: grid;
+  grid-area: list-body;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   overflow-y: auto;
   overflow-x: hidden;
   grid-auto-flow: dense;
-  grid-column: 2 span;
+  grid-area: list-body;
+  min-height: 0;
 
   @container style(--list-appearance: vertical) {
     grid-template-columns: 1fr;
@@ -393,6 +398,7 @@
 }
 
 .item-card {
+  align-self: baseline;
   padding: 0.625rem;
   border: 1px solid transparent;
   border-radius: 0.5rem;

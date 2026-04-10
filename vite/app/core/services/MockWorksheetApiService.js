@@ -1,4 +1,4 @@
-import WorksheetApiService from './WorksheetApiService';
+import AbstractWorksheetApiService from './AbstractWorksheetApiService';
 
 let WorksheetMockObject = {
     rowsCount: 8,
@@ -65,7 +65,7 @@ let WorksheetMockObject = {
     },
     rules: [],
     analyses: {
-        'uid-1': { wellIdx: 1, data: { keyword: 'kwrd-1', title: 'Lab Test 1', sampleType: 'epithelium', sampleId: 'S-001', clientId: 'AAA', clientName: 'Coca-Cola'} },
+        'uid-1': { wellIdx: 1, data: { keyword: 'kwrd-1', title: 'Lab Test 1', sampleType: 'epithelium', sampleId: 'S-001', clientId: 'AAA', clientName: 'Coca-Cola' } },
         'uid-2': { wellIdx: 48, data: { keyword: 'kwrd-1', title: 'Lab Test 1', sampleType: 'blood', sampleId: 'S-010', clientId: 'BBB', clientName: 'Apple' } },
         'uid-3': { wellIdx: 96, data: { keyword: 'kwrd-3', title: 'Lab Test 3', sampleType: 'blood', sampleId: 'S-017', clientId: 'BBB', clientName: 'Apple' } },
         'uid-4': { wellIdx: 20, data: { keyword: 'kwrd-3', title: 'Lab Test 3', sampleType: 'epithelium', sampleId: 'S-025', clientId: 'CCC', clientName: 'BMW' } },
@@ -106,7 +106,7 @@ let WorksheetMockObject = {
     },
 }
 
-class MockWorksheetApiService extends WorksheetApiService {
+class MockWorksheetApiService extends AbstractWorksheetApiService {
     constructor() {
         super();
         this.baseUrl = '';
@@ -116,43 +116,15 @@ class MockWorksheetApiService extends WorksheetApiService {
         return Promise.resolve(WorksheetMockObject);
     }
 
-    async assignuid({ uid, wellIdx }) {
+    async write_plate_data() {
         return Promise.resolve();
     }
 
-    async assignAnalyses(listOfAssignments) {
+    async unassign_analyses(analyses) {
+        const uids_to_remove = Object.keys(analyses);
+        const response = { success: true, analyses: Object.fromEntries(Object.entries(WorksheetMockObject.analyses).filter(([uid]) => !uids_to_remove.includes(uid)) ) };
+        console.log('Mock unassigning analyses:', response);
         return Promise.resolve();
-    }
-
-    async unassignuid({ uid }) {
-        return Promise.resolve();
-    }
-
-    async unassignAnalyses(uids) {
-        return Promise.resolve();
-    }
-
-    async write_plate_data(analyses) {
-        const body = JSON.stringify(
-            {
-                method: "write_plate_data",
-                plate_data: {
-                    analyses: Object.entries(analyses).reduce((acc, [key, value]) => {
-                        acc[key] = { wellIdx: value.wellIdx };
-                        return acc;
-                    }, {})
-                }
-            }
-        )
-        try {
-            const response = 'ok';
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return Promise.resolve();
-        } catch (error) {
-            throw new Error(`Failed to fetch plate: ${error.message}`);
-        }
     }
 
 }

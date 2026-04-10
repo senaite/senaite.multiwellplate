@@ -1,43 +1,19 @@
+import AbstractWorksheetApiService from './AbstractWorksheetApiService';
 
+class WorksheetApiService extends AbstractWorksheetApiService {
 
-class WorksheetApiService {
     constructor(baseUrl) {
+        super();
         this.baseUrl = baseUrl;
     }
 
-    async fetch() {
-        try {
-            const response = await fetch(`${this.baseUrl}/multiwellplate_api`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return await response.json();
-        } catch (error) {
-            throw new Error(`Failed to fetch plate: ${error.message}`);
-        }
+    async fetch(data) {
+        return await fetch(`${this.baseUrl}/multiwellplate_api`, data);
     }
-
+    
     async write_plate_data(analyses) {
         try {
-            const response = await fetch(`${this.baseUrl}/multiwellplate_api`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(
-                        {
-                            method: "write_plate_data",
-                            plate_data: {
-                                analyses: Object.entries(analyses).reduce((acc, [key, value]) => {
-                                    acc[key] = {wellIdx: value.wellIdx}; 
-                                    return acc;
-                                }, {})
-                            }
-                        }
-                    )
-                }
-            );
+            const response = await this.fetch(this.buildPostData("write_data", analyses));
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -47,6 +23,20 @@ class WorksheetApiService {
             throw new Error(`Failed to fetch plate: ${error.message}`);
         }
     }
+
+    async unassign_analyses(analyses) {
+        try {
+            const response = await this.fetch(this.buildPostData("unassign_analyses", analyses));
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            throw new Error(`Failed to unassign analyses: ${error.message}`);
+        }
+    }
+
 }
 
 export default WorksheetApiService;

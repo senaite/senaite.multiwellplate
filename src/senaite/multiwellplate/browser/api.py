@@ -74,24 +74,31 @@ class MultiWellPlateApi(BrowserView):
         """Start config for front application
         """
         return get_mwp_config(self.context)
-
-    def ajax_read_plate_data(self):
-        """Returned plate configuration
-        :returns: The object of multiwell plate for this worksheet
+    
+    def get_worksheet_analyses_obj(self):
+        """Read plate data 
+        :returns: The object of analyses for this worksheet
         :rtype: dict
         """
         analyses = {}
         for an in self.context.getAnalyses():
             an_uid = api.get_uid(an)
             analyses[an_uid] = get_analysis_data(self.mwp, an)
-        return {"analyses": analyses}
+        return analyses
 
-    def ajax_write_plate_data(self):
+    def ajax_read_data(self):
+        """Returned plate data 
+        :returns: The object of multiwell plate for this worksheet
+        :rtype: dict
+        """
+        return {"analyses": self.get_worksheet_analyses_obj()}
+
+    def ajax_write_data(self):
         """Write plate configuration
         :returns: Result of write plate
         :rtype: dict
         """
-        plate = self.data.get("plate_data", None)
+        plate = self.data.get("data", None)
         if not plate:
             self.mwp.setMultiWellPlate([])
         data = []
@@ -106,3 +113,23 @@ class MultiWellPlateApi(BrowserView):
             })
         self.mwp.setMultiWellPlate(data)
         return {"success": True}
+
+    def ajax_unassign_analyses(self):
+        """Unassign analyses from the worksheet
+        :returns: Result of unassign 
+        :rtype: dict
+        """
+
+        plate = self.data.get("data", None)
+
+        if not plate:
+            return {"success": True}
+        
+        analyses = plate.get("analyses", {})
+        for uid in analyses.keys():
+            an = api.get_object_by_uid(uid)
+            if an is None:
+                continue
+            self.context.removeAnalysis(an)
+
+        return { "success": True, "analyses": self.get_worksheet_analyses_obj() }

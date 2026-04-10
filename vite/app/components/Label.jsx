@@ -1,9 +1,9 @@
 import { useContext, useSyncExternalStore } from "react";
-import { WorksheetPresenterContext } from '../App.jsx';
+import { AppContext } from "../AppContext.js";
 import { cleanAndJoinClasses } from "../utils/helpers.js";
 
 function Label({ row, col }) {
-    const presenter = useContext(WorksheetPresenterContext);
+    const { presenter } = useContext(AppContext);
     const analyses = useSyncExternalStore(presenter.subscribe, () => presenter.getAnalysesListSnapshot());
     const allSelected = (uids) => uids.every(uid => analyses[uid]?.isSelected);
 

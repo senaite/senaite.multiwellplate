@@ -16,13 +16,13 @@ export function ListDraggableItem({ item, itemType, fieldConfig, handleItemClick
     const [isDragging, setIsDragging] = useState(false);
 
     useDragDropMonitor({
-        onDragStart(event, manager) {
+        onDragStart() {
             item.isSelected && setIsDragging(true);
         },
-        onDragEnd(event, manager) {
+        onDragEnd() {
             item.isSelected && setIsDragging(false);
         },
-        onDragCancel(event, manager) {
+        onDragCancel() {
             item.isSelected && setIsDragging(false);
         },
     }

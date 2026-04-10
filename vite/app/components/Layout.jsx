@@ -1,7 +1,6 @@
-import { createContext, useContext, useRef, useState } from 'react';
-import { WorksheetPresenterContext } from '../App.jsx';
+import { useContext, useRef } from 'react';
+import { AppContext } from '../AppContext.js';
 import {
-    DEFAULT_LAYOUT_MODE,
     APP_LAYOUT_MODE, WIDGET_LAYOUT_MODE, HIDDEN_LAYOUT_MODE
 } from '../config.js';
 import AppControls from './AppControls.jsx';
@@ -10,13 +9,9 @@ import Workspace from './Workspace.jsx';
 import { useClickOutsideRef, useEscape, useAnchorClick } from '../utils/hooks.jsx';
 import { isWidget, isOpen, isContainered } from '../utils/helpers.js'
 
-export const AppContext = createContext({})
 
-
-function Layout({ startMode }) {
-    const presenter = useContext(WorksheetPresenterContext);
-    const [mode, setMode] = useState(startMode || DEFAULT_LAYOUT_MODE);
-    const [anchor, setAnchor] = useState(null);
+function Layout() {
+    const { presenter, mode, setMode, anchor, setAnchor } = useContext(AppContext);
     const containerRef = useRef(null);
 
     const toggleAppMode = () => {
@@ -52,12 +47,8 @@ function Layout({ startMode }) {
         ...(anchor && { positionAnchor: `--${anchor}` })
     };
 
-    const appContext = { mode, anchor};
-
-
     return (
         isOpen(mode) && (
-            <AppContext.Provider value={appContext}>
                 <div className={`layout ${layoutClass}`} style={layoutStyle} ref={containerRef}>
                     <div className={mainClass}>
                         {!isContainered(mode) &&
@@ -72,7 +63,6 @@ function Layout({ startMode }) {
                             : <Workspace rowsCount={rowsCount} colsCount={colsCount} />}
                     </div>
                 </div>
-            </AppContext.Provider>
         ));
 }
 

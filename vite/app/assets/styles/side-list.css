@@ -18,7 +18,7 @@
     "list-body list-body";
   --list-appearance: initial;
 
-   @container (width < 50vw) {
+  @container not style(--workspace-layout: narrow) {
     grid-template-columns: 1fr;
     grid-template-areas: "list-header"
       "list-filter"
@@ -39,7 +39,7 @@
   border-bottom: 1px solid #f1f5f9;
   width: auto;
   justify-content: start;
-  
+
 
   @container style(--list-appearance: vertical) {
     justify-content: space-between;
@@ -87,7 +87,7 @@
   overflow: hidden;
 }
 
-.filter-panel > * {
+.filter-panel>* {
   user-select: none;
   -webkit-user-select: none;
   -ms-user-select: none;
@@ -307,8 +307,8 @@
   overflow-y: auto;
   overflow-x: hidden;
   grid-auto-flow: dense;
-  grid-area: list-body;
   min-height: 0;
+  height: 100cqh;
 
   @container style(--list-appearance: vertical) {
     grid-template-columns: 1fr;
@@ -383,7 +383,8 @@
   opacity: 0.75;
 }
 
-.group-title, .well-title {
+.group-title,
+.well-title {
   font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.07em;
@@ -391,7 +392,8 @@
   color: #94a3b8;
 }
 
-.group-count, .well-count {
+.group-count,
+.well-count {
   font-size: 0.6875rem;
   font-weight: 400;
   color: #cbd5e1;

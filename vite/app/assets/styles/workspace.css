@@ -53,8 +53,15 @@
 
 .workspace-plate {
     grid-area: plate;
-    container-name: plate-panel;
-    container-type: inline-size;
+
+}
+
+:is(.layout-app, .layout-container) .workspace-plate {
+    @container (width > 1200px) {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
 }
 
 .workspace-assigned {

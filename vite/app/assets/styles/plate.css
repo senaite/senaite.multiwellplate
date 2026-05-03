@@ -1,28 +1,36 @@
 .plate-container-wrapper {
   position: relative;
+  flex: 1;
+  min-height: 0;
+  container-type: inline-size;
+  container-name: plate-container-wrapper;
 }
 
 .plate-container {
   display: grid;
   grid-template-columns: 1rem repeat(var(--cols), 1fr);
   grid-template-rows: 1rem repeat(var(--rows), 1fr);
-  gap: 0;
   grid-auto-flow: row;
   background-color: #C7CBD2;
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
   height: auto;
-  padding: 0.5rem;
-  max-height: fit-content;
+  padding: var(--plate-padding);
+  gap: var(--plate-gap);
 
-  @container style(--workspace-layout: wide) {
-    gap: var(--plate-gap);
-  }
+}
+
+.plate-container:not(.widget) {
+    --plate-aux-space: 2*var(--plate-padding) - var(--plate-label-size);
+    /* define min well side length  */
+    --well-side-length: min(
+        calc((100cqw - var(--plate-aux-space) - var(--plate-gap) * (var(--cols))) / var(--cols)),
+        calc((100cqh - var(--plate-aux-space) - var(--plate-gap) * (var(--rows))) / var(--rows)));
+    grid-template-columns: var(--plate-label-size) repeat(var(--cols), minmax(0, var(--well-side-length)));
+    grid-template-rows: var(--plate-label-size) repeat(var(--rows), minmax(0, var(--well-side-length)));
 }
 
 :is(.layout-widget) .plate-container {
   margin: 0;
-  padding: 0.5rem;
-  gap: var(--plate-gap);
 }
 
 .label:not(:empty) {
@@ -97,7 +105,7 @@
   }
 }
 
-.layout-widget .well:hover:not(.well--not-assignable){
+.layout-widget .well:hover:not(.well--not-assignable) {
   border: 3px solid #AAA;
   cursor: pointer;
 }
@@ -109,10 +117,6 @@
   border: 0.25em solid transparent;
   background-color: transparent;
 
-  @container style(--workspace-layout: narrow) or (orientation: landscape) {
-    aspect-ratio: 1/1;
-    width: calc(100cqw / calc(var(--cols)*1.5));
-  }
 }
 
 :is(.layout-app, .layout-container) .well-inner {
@@ -121,8 +125,8 @@
   align-items: center;
   justify-content: center;
   aspect-ratio: 1 / 1;
-  width: calc(100% - 0.5em);
-  height: calc(100% - 0.5em);
+  width: 100%;
+  height: 100%;
   border: 3px solid white;
   background-color: white;
   position: relative;
